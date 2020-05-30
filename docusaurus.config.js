@@ -71,7 +71,7 @@ module.exports = {
           showLastUpdateTime: true,
           // this enabled the edit button for documentation
           editUrl:
-            "https://github.com/ayonious/console-table-docu/blob/master/",
+            "https://github.com/ayonious/interview-cheatsheet/blob/master/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),

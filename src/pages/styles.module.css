@@ -5,6 +5,33 @@
  * and scoped locally.
  */
 
+.headline {
+  background-color: #2b3137;
+  padding: 50px;
+}
+
+.headlineSub {
+  margin: 0 auto;
+  max-width: 1100px;
+}
+
+.headlineText {
+  font-size: 60px;
+  color: white;
+}
+
+.getStartButton {
+  padding: 20px 40px;
+  border: 2px solid var(--ifm-color-primary);
+  display: inline-block;
+  border-radius: 6px;
+  color: white;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+/* defaults */
+
 .heroBanner {
   padding: 4rem 0;
   text-align: center;

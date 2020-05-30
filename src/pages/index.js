@@ -30,17 +30,14 @@ function PageHeadLine() {
       <div className={styles.headlineSub}>
         <h1 className={styles.headlineText}>
           <img
-            alt="CTP Logo"
+            alt="CheatSheet logo"
             className={styles.productLogoHomePage}
-            src={useBaseUrl("img/logo.ico")}
+            src={useBaseUrl("img/logo.png")}
           />
-          Print <span className={styles.coloredWords}>colorful Tables</span> on
-          Console, directly from{" "}
-          <span className={styles.coloredWords}>JSON string</span>
         </h1>
         <Link
           className={styles.getStartButton}
-          to={useBaseUrl("docs/doc-install-quick-start")}
+          to={useBaseUrl("docs/Databases")}
         >
           GET STARTED
         </Link>
