@@ -3,7 +3,7 @@ const versions = require("./versions.json");
 module.exports = {
   title: "Interview Cheatsheet", // Title for your website.
   tagline: "Collection of my interview questions for interview",
-  url: "https://console-table.netlify.app", // Your website URL
+  url: "https://interview-cheatsheet.netlify.app", // Your website URL
   baseUrl: "/", // Base URL for your project */
 
   favicon: "img/favicon.ico",
