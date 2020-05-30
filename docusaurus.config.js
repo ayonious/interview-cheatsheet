@@ -20,7 +20,7 @@ module.exports = {
       title: "Interview Cheatsheet",
       logo: {
         alt: "CTP",
-        src: "img/logo.ico",
+        src: "img/favicon.ico",
       },
       links: [
         {
