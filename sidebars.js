@@ -1,6 +1,6 @@
 module.exports = {
   docs: {
-    JS: ["Eventloop", "Promise", "jQuery"],
+    JS: ["Promise", "Promise-quiz", "Eventloop", "jQuery"],
     Backend: ["Databases"],
     Cultural: [],
   },
