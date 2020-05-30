@@ -5,48 +5,6 @@
  * and scoped locally.
  */
 
-.headline {
-  background-color: #2b3137;
-  padding: 50px;
-}
-
-.headlineSub {
-  margin: 0 auto;
-  max-width: 1100px;
-}
-
-.headlineText {
-  font-size: 60px;
-  color: white;
-}
-
-.productLogoHomePage {
-  float: right;
-  width: 200px;
-}
-
-.getStartButton {
-  padding: 20px 40px;
-  border: 2px solid var(--ifm-color-primary);
-  display: inline-block;
-  border-radius: 6px;
-  color: white;
-  font-size: 30px;
-  font-weight: bold;
-}
-
-.getStartButton:hover {
-  text-decoration: none;
-}
-
-.coloredWords {
-  color: var(--ifm-color-primary);
-}
-
-/*
-here the default values
-*/
-
 .heroBanner {
   padding: 4rem 0;
   text-align: center;

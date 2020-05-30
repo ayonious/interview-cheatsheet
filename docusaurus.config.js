@@ -1,8 +1,8 @@
 const versions = require("./versions.json");
 
 module.exports = {
-  title: "Console Table Printer", // Title for your website.
-  tagline: "A tool to print colorful table on your console",
+  title: "Interview Cheatsheet", // Title for your website.
+  tagline: "Collection of my interview questions for interview",
   url: "https://console-table.netlify.app", // Your website URL
   baseUrl: "/", // Base URL for your project */
 
@@ -14,49 +14,18 @@ module.exports = {
     announcementBar: {
       id: "support",
       content:
-        '⭐️ If you like Console Table Printer, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/ayonious/console-table-printer">GitHub</a>! ⭐️',
+        '⭐️ If you like Interview Cheatsheet, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/ayonious/interview-cheatsheet">GitHub</a>! ⭐️',
     },
     navbar: {
-      title: "Console Table Printer",
+      title: "Interview Cheatsheet",
       logo: {
         alt: "CTP",
         src: "img/logo.ico",
       },
       links: [
-        /*{
-          label: "Docs",
-          to: "docs/introduction", // "fake" link
-          position: "left",
-          activeBasePath: "docs",
-          items: [
-            {
-              label: versions[0],
-              to: "docs/",
-              exact: true,
-            },
-            ...versions.slice(1).map((version) => ({
-              label: version,
-              to: `docs/${version}/`,
-            })),
-            {
-              label: "Master/latest",
-              to: "docs/next/",
-            },
-          ],
-        },
         {
-          to: "versions",
-          label: `${versions && versions[0 || ""]}`,
-          position: "right",
-        },*/
-        {
-          href: "https://github.com/ayonious/console-table-printer",
+          href: "https://github.com/ayonious/interview-cheatsheet",
           label: "GitHub",
-          position: "right",
-        },
-        {
-          href: "https://www.npmjs.com/package/console-table-printer",
-          label: "Npmjs",
           position: "right",
         },
       ],
@@ -65,28 +34,24 @@ module.exports = {
       style: "dark",
       links: [
         {
-          title: "Learn",
+          title: "Backend",
           items: [
             {
-              label: "Quick Start",
-              to: "docs/doc-install-quick-start",
-            },
-            {
-              label: "Getting Started With CLI",
-              to: "docs/doc-cli-install-quick-start",
+              label: "Databases",
+              to: "docs/Databases",
             },
           ],
         },
         {
-          title: "More",
+          title: "JS",
           items: [
             {
-              label: "GitHub",
-              href: "https://www.npmjs.com/package/console-table-printer",
+              label: "Eventloop",
+              to: "docs/Eventloop",
             },
             {
-              label: "Npmjs",
-              href: "https://www.npmjs.com/package/console-table-printer",
+              label: "jQuery",
+              to: "docs/jQuery",
             },
           ],
         },
@@ -99,7 +64,7 @@ module.exports = {
       "@docusaurus/preset-classic",
       {
         docs: {
-          homePageId: "doc-install-quick-start",
+          homePageId: "Databases",
           path: "docs",
           sidebarPath: require.resolve("./sidebars.js"),
           showLastUpdateAuthor: true,

@@ -1,5 +1,12 @@
-# Documentation for Console Table Printer
+# Interview Cheatsheet
+
+## Topics
+
+1. JS
+2. Fullstack
+3. Backend
+4. Frontend
 
 # 🎁 See Deployed
 
-https://console-table.netlify.app
+https://interview-cheatsheet.netlify.app

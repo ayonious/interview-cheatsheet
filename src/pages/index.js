@@ -6,49 +6,6 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import styles from "./styles.module.css";
 
-const features = [
-  {
-    title: <>Light and Fast</>,
-    imageUrl: "img/undraw_floating_61u6.svg",
-    description: (
-      <>
-        As light as just 25kb. Install it in no time and its balzing fast as
-        well{" "}
-      </>
-    ),
-  },
-  {
-    title: <>Free</>,
-    imageUrl: "img/undraw_gift1_sgf8.svg",
-    description: (
-      <>
-        Console Table Printer is free and open source under MIT license. It has
-        very minimal dependencies
-      </>
-    ),
-  },
-  {
-    title: <>Typed</>,
-    imageUrl: "img/undraw_powerful_26ry.svg",
-    description: <>Use it happily with typescript and Javascript</>,
-  },
-];
-
-function Feature({ imageUrl, title, description }) {
-  const imgUrl = useBaseUrl(imageUrl);
-  return (
-    <div className={classnames("col col--4", styles.feature)}>
-      {imgUrl && (
-        <div className="text--center">
-          <img className={styles.featureImage} src={imgUrl} alt={title} />
-        </div>
-      )}
-      <h3>{title}</h3>
-      <p>{description}</p>
-    </div>
-  );
-}
-
 function Features() {
   return (
     <div>
@@ -99,7 +56,6 @@ function Home() {
     <Layout title={`${siteConfig.title}`} description={`${siteConfig.tagline}`}>
       <main>
         <PageHeadLine />
-        <Features />
       </main>
     </Layout>
   );
