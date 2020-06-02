@@ -4,8 +4,4 @@ title: Eventloop
 sidebar_label: Eventloop
 ---
 
-import useBaseUrl from '@docusaurus/useBaseUrl';
-
-You can put properties for alignment
-
-Its magic
+Best way to understand this is to watch the conference of JSConf EU by Philip Roberts
