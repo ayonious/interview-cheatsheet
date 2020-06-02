@@ -1,7 +1,7 @@
 ---
-id: Databases
-title: Databases
-sidebar_label: Databases
+id: Lock
+title: Lock
+sidebar_label: Lock
 ---
 
 # Deadlock
