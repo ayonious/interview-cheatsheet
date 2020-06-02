@@ -26,21 +26,17 @@ function Features() {
 function PageHeadLine() {
   return (
     <div className={styles.headline}>
-      <div className={styles.headlineSub}>
-        <h1 className={styles.headlineText}>
-          <img
-            alt="CheatSheet logo"
-            className={styles.productLogoHomePage}
-            src={useBaseUrl("img/logo.png")}
-          />
-        </h1>
-        <Link
-          className={styles.getStartButton}
-          to={useBaseUrl("docs/Databases")}
-        >
-          GET STARTED
-        </Link>
+      <div>
+        <img
+          className={styles.headlineText}
+          alt="CheatSheet logo"
+          className={styles.productLogoHomePage}
+          src={useBaseUrl("img/logo.png")}
+        />
       </div>
+      <Link className={styles.getStartButton} to={useBaseUrl("docs/Databases")}>
+        GET STARTED
+      </Link>
     </div>
   );
 }

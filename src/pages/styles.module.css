@@ -8,11 +8,7 @@
 .headline {
   background-color: #2b3137;
   padding: 50px;
-}
-
-.headlineSub {
-  margin: 0 auto;
-  max-width: 1100px;
+  text-align: center;
 }
 
 .headlineText {
@@ -28,6 +24,10 @@
   color: white;
   font-size: 30px;
   font-weight: bold;
+}
+
+.getStartButton :hover {
+  text-decoration: none;
 }
 
 /* defaults */

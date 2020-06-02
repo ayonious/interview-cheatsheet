@@ -47,12 +47,12 @@ jquery can query your html and do changes there accordingly. This ilterally mean
 Now lets talk about solution with jquery. After the dom is rendered you can run some kind of regex to find all those div-s and then replace or add new stuffs accordingly. Here is my solution as code. Enjoy!
 
 ```js
-import \$ from "jquery";
+import $ from "jquery";
 import React, { Component } from "react";
 
 class PostDetails extends Component<any, any> {
   componentDidMount() {
-    \$("h1").wrapInner(`<span class="temporary_magic"></span>`);
+    $("h1").wrapInner(`<span class="temporary_magic"></span>`);
 
     $(".temporary_magic").each((ind, val) => {
       const hashUrlContent = val.textContent.toLowerCase().split(" ").join("-");
