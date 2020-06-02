@@ -10,8 +10,6 @@ sidebar_label: Databases
 
 When each process holds something that the other process needs, making both process stuck
 
-# Starvation
-
--
-
 # Race condition
+
+- Best example: Optimistic Exception
