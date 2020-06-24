@@ -2,7 +2,7 @@ module.exports = {
   docs: {
     Welcome: ["Introduction"],
     JS: ["Promise", "Promise-quiz", "Eventloop", "jQuery"],
-    Backend: ["Databases", "Lock"],
+    Backend: ["Databases", "DatabasesScaling", "Lock"],
     SystemDesign: ["DesignSummary"],
     SoftwareDevProcess: ["SoftDevPractices"],
     Cultural: ["IntroductionCulture"],
