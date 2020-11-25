@@ -22,7 +22,7 @@ module.exports = {
         alt: "CTP",
         src: "img/favicon.ico",
       },
-      links: [
+      items: [
         {
           href: "https://github.com/ayonious/interview-cheatsheet",
           label: "GitHub",
@@ -64,7 +64,6 @@ module.exports = {
       "@docusaurus/preset-classic",
       {
         docs: {
-          homePageId: "Databases",
           path: "docs",
           sidebarPath: require.resolve("./sidebars.js"),
           showLastUpdateAuthor: true,

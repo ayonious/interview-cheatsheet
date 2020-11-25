@@ -2,6 +2,7 @@
 id: Introduction
 title: Introduction
 sidebar_label: Introduction
+slug: /
 ---
 
 - whats the difference between deadlock and race conditions?
