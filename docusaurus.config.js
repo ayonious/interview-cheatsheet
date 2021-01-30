@@ -24,6 +24,24 @@ module.exports = {
       },
       items: [
         {
+          type: 'doc',
+          position: 'left',
+          docId: 'behavior/Introduction',
+          label: '🧙‍♂️ Behavior',
+        },
+        {
+          type: 'doc',
+          position: 'left',
+          docId: 'backend/Databases',
+          label: '🏋️‍♀️  Backend',
+        },
+        {
+          type: 'doc',
+          position: 'left',
+          docId: 'frontend/Promise',
+          label: '💄 Frontend',
+        },
+        {
           href: "https://github.com/ayonious/interview-cheatsheet",
           label: "GitHub",
           position: "right",

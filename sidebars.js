@@ -1,11 +1,16 @@
 module.exports = {
-  docs: {
-    Welcome: ["Introduction"],
-    Recruiter: ["RecruiterGetToKnow"],
-    JS: ["Promise", "Promise-quiz", "Eventloop", "jQuery"],
-    Backend: ["Databases", "DatabasesScaling", "Lock"],
-    SystemDesign: ["DesignSummary"],
-    SoftwareDevProcess: ["SoftDevPractices"],
-    Cultural: ["IntroductionCulture"],
+  Backend: {
+    Databases: ["backend/Databases", "backend/DatabasesScaling", "backend/Lock"],
+    SystemDesign: ["backend/DesignSummary"],
+    SoftwareDevProcess: ["backend/SoftDevPractices"],
+    JS: ["backend/Eventloop"],
+  },
+  Frontend: {
+    JS: ["frontend/Promise", "frontend/Promise-quiz", "frontend/jQuery"],
+  },
+  Behavior: {
+    Welcome: ["behavior/Introduction"],
+    Recruiter: ["behavior/RecruiterGetToKnow"],
+    Cultural: ["behavior/IntroductionCulture"],
   },
 };

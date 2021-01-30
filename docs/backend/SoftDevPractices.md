@@ -17,7 +17,7 @@ sidebar_label: SoftDevPractices
 - Example is the cucumber tests
 
 ```
-Scenatio: Creating a user
+Scenario: Creating a user
 
 When: I create a user
 Then: I expect user to exist
