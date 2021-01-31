@@ -1,5 +1,3 @@
-const versions = require("./versions.json");
-
 module.exports = {
   title: "Interview Cheatsheet", // Title for your website.
   tagline: "Collection of my interview questions for interview",
