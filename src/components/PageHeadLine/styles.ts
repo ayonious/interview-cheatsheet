@@ -30,6 +30,10 @@ export const GetStartButton = styled.div`
     color: white;
     font-size: 30px;
     font-weight: bold;
+    :hover {
+      text-decoration: none;
+      color: ${ColorPrimary};
+    }
   }
 `;
 
