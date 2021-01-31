@@ -3,7 +3,7 @@ module.exports = {
     Databases: ["backend/Databases", "backend/DatabasesScaling", "backend/Lock"],
     SystemDesign: ["backend/DesignSummary"],
     SoftwareDevProcess: ["backend/SoftDevPractices"],
-    JS: ["backend/Eventloop"],
+    JS: ["backend/Eventloop", "backend/AsyncVsThreading"],
   },
   Frontend: {
     JS: ["frontend/Promise", "frontend/Promise-quiz", "frontend/jQuery"],
