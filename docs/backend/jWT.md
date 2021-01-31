@@ -21,13 +21,15 @@ Its a way of securely transfer data between 2 parties.
 
 ### Some tricky questions?
 
-1. How to force a user to logout on all sessions?
-
-- We need to keep a blacklist server with each user id. This way we can keep track which user needs to be logged out.
-
 1. How do logout work in jwt?
 
 - cookie deletion response from server. This
+
+2. How to force a user to logout on all sessions?
+
+- We need to keep a blacklist server with each user id. This way we can keep track which user needs to be logged out.
+- Or we can keep the token lifetime short and rotate them all the time.
+- One good way to immediately block the user from all sessions in case of token compromise is to Change the userid to something so that the user wont be found anymore.
 
 ### Common hacking Attempt in jwt?
 
