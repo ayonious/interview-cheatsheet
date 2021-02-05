@@ -6,15 +6,15 @@
   "packageRules": [
     {
       "packagePatterns": [ "*" ],
+      "excludePackagePatterns": ["webpack-cli"],
       "groupName": "all dependencies",
       "groupSlug": "all"    
     }
   ],
   "rangeStrategy": "bump",
   "automerge": true,
-  "schedule": "before 3am on Saturday",
+  "schedule": "before 3am on Monday",
   "lockFileMaintenance": {
     "enabled": true
   }
 }
-
