@@ -54,7 +54,7 @@ module.exports = {
           items: [
             {
               label: "Databases",
-              to: "docs/Databases",
+              to: "docs/backend/Databases",
             },
           ],
         },
@@ -63,11 +63,11 @@ module.exports = {
           items: [
             {
               label: "Eventloop",
-              to: "docs/Eventloop",
+              to: "docs/backend/Eventloop",
             },
             {
               label: "jQuery",
-              to: "docs/jQuery",
+              to: "docs/frontend/jQuery",
             },
           ],
         },
