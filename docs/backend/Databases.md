@@ -15,7 +15,7 @@ sidebar_label: Databases
 ## When SQL Better than NOSQL
 
 - SQL is easy to setup
-- SQL is very fast for small amount of data
+- SQL is very fast for small amount of data (constant number of fields/columns)
 - SQL databases are meant to be joined together to get a bigger amount of data. This linking is done really good in SQL
 
 ## When noSQL Better than SQL
