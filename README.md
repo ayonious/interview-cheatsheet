@@ -1,6 +1,6 @@
 # Interview Cheatsheet
 
-> My interview Preparation Guide. Having Interview preparation guide is against my will
+> My interview Preparation Guide. Having Interview preparation guide is against my will but still better prepare and be confident than not preparing at all
 
 ## 🤷 But Why another Guide?
 
