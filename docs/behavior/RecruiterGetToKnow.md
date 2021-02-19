@@ -4,7 +4,7 @@ title: Introduction With Recruiter
 sidebar_label: Get To Know
 ---
 
-I realized this phase is quite Randomized. Some recruiters dont even know what they are looking for. It could be they want someone with 5 years of experience on a Technology that was invented 4 years ago.
+I realized this phase is quite Randomized. Some recruiters don't even know what they are looking for. It could be they want someone with 5 years of experience on a Technology that was invented 4 years ago.
 
 Don't expect recruiters to clearly explain you a lot of things always. Sometimes they are very much in a hurry and sometimes they take time.
 
@@ -35,5 +35,5 @@ Don't expect recruiters to clearly explain you a lot of things always. Sometimes
 ## Common questions you can ask
 
 - Tell me more about your business.
-- Tell them that you liked their Product. Would be good if you are already a user and tell them your user experience. Find some problems in their Prodcut for example maybe you had issues during Payment as they dont support some payment methods. (EC card or Paypal) Make sure this is not super in details but something a recruiter will be able to understand and see that you have interest
+- Tell them that you liked their Product. Would be good if you are already a user and tell them your user experience. Find some problems in their Product for example maybe you had issues during Payment as they don't support some payment methods. (EC card or Paypal) Make sure this is not super in details but something a recruiter will be able to understand and see that you have interest
 - How many customers do you have?
