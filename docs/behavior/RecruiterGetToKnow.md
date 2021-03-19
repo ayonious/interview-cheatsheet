@@ -37,3 +37,4 @@ Don't expect recruiters to clearly explain you a lot of things always. Sometimes
 - Tell me more about your business.
 - Tell them that you liked their Product. Would be good if you are already a user and tell them your user experience. Find some problems in their Product for example maybe you had issues during Payment as they don't support some payment methods. (EC card or Paypal) Make sure this is not super in details but something a recruiter will be able to understand and see that you have interest
 - How many customers do you have?
+- What made you leave your last job and join this company?
