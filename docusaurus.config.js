@@ -8,7 +8,6 @@ module.exports = {
   organizationName: "facebook", // Usually your GitHub org/user name.
   projectName: "docusaurus", // Usually your repo name.
   themeConfig: {
-    sidebarCollapsible: false,
     announcementBar: {
       id: "support",
       content:
@@ -81,6 +80,7 @@ module.exports = {
       {
         docs: {
           path: "docs",
+          sidebarCollapsible: false,
           sidebarPath: require.resolve("./sidebars.js"),
           showLastUpdateAuthor: true,
           showLastUpdateTime: true,
