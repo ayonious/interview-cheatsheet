@@ -7,7 +7,7 @@ module.exports = {
     security: ["backend/jWT"],
   },
   Frontend: {
-    JS: ["frontend/Promise", "frontend/Promise-quiz", "frontend/jQuery"],
+    JS: ["frontend/Promise", "frontend/Promise-quiz", "frontend/jQuery", "frontend/Closure"],
   },
   Behavior: {
     Welcome: ["behavior/Introduction"],
