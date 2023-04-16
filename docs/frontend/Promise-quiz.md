@@ -40,6 +40,7 @@ end
 2
 resolved
 1
+resolved
 ```
 
 ## Q2
