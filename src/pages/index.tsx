@@ -6,8 +6,7 @@ import PageHeadLine from "../components/PageHeadLine";
 import Sources from "../components/Sources";
 
 const Home = () => {
-  const context = useDocusaurusContext();
-  const { siteConfig = {} } = context;
+  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout title={`${siteConfig.title}`} description={`${siteConfig.tagline}`}>
       <main>
