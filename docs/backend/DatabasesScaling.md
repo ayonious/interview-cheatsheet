@@ -502,7 +502,7 @@ const services = {
 ✅ **Choose Vertical When:**
 - **Complex transactions**: Heavy ACID requirement
 - **Development speed**: Quick time to market
-- **Small to medium scale**: <1M users, <1TB data
+- **Small to medium scale**: &lt;1M users, &lt;1TB data
 - **Legacy systems**: Existing applications hard to refactor
 - **Strong consistency**: Immediate consistency requirements
 - **Simple operations**: Limited DevOps resources
