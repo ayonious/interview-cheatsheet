@@ -1,0 +1,94 @@
+name: Cypress E2E Tests
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+env:
+  # Use Node.js 22 to match Netlify configuration
+  NODE_VERSION: '22'
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Run tests in parallel across multiple containers for faster execution
+        containers: [1, 2]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build the application
+        run: yarn build
+
+      - name: Start server and run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          # Build the app before running tests
+          build: yarn build
+          # Start the server before running tests
+          start: yarn start
+          # Wait for the server to be ready
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          # Run tests in headless mode
+          browser: chrome
+          # Record test results (optional, requires Cypress Dashboard)
+          record: false
+          # Run tests in parallel
+          parallel: true
+          # Group test runs
+          group: 'UI Tests'
+          # Specify config file
+          config-file: cypress.config.ts
+        env:
+          # For parallel execution
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Cypress screenshots on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots-${{ matrix.containers }}
+          path: cypress/screenshots
+          retention-days: 7
+
+      - name: Upload Cypress videos on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-videos-${{ matrix.containers }}
+          path: cypress/videos
+          retention-days: 7
+
+  # Job to check if all tests passed (required for branch protection)
+  cypress-tests-complete:
+    runs-on: ubuntu-latest
+    needs: cypress-run
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          if [[ "${{ needs.cypress-run.result }}" == "failure" ]]; then
+            echo "Cypress tests failed"
+            exit 1
+          elif [[ "${{ needs.cypress-run.result }}" == "cancelled" ]]; then
+            echo "Cypress tests were cancelled"
+            exit 1
+          else
+            echo "Cypress tests passed"
+          fi 
