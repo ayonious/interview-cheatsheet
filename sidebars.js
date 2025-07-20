@@ -13,7 +13,7 @@ module.exports = {
   },
   Behavior: {
     Welcome: ["behavior/Introduction"],
-    "Interview Questions": ["behavior/BehavioralQuestions"],
+    "Interview Prep": ["behavior/StarMethod", "behavior/CommonQuestions", "behavior/InterviewTips"],
     Recruiter: ["behavior/RecruiterGetToKnow"],
     Cultural: ["behavior/IntroductionCulture"],
   },

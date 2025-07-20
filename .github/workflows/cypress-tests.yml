@@ -13,10 +13,6 @@ env:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # Run tests in parallel across multiple containers for faster execution
-        containers: [1, 2]
     
     steps:
       - name: Checkout code
@@ -37,8 +33,6 @@ jobs:
       - name: Start server and run Cypress tests
         uses: cypress-io/github-action@v6
         with:
-          # Build the app before running tests
-          build: yarn build
           # Start the server before running tests
           start: yarn start
           # Wait for the server to be ready
@@ -46,24 +40,16 @@ jobs:
           wait-on-timeout: 120
           # Run tests in headless mode
           browser: chrome
-          # Record test results (optional, requires Cypress Dashboard)
-          record: false
-          # Run tests in parallel
-          parallel: true
-          # Group test runs
-          group: 'UI Tests'
           # Specify config file
           config-file: cypress.config.ts
         env:
-          # For parallel execution
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Cypress screenshots on failure
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: cypress-screenshots-${{ matrix.containers }}
+          name: cypress-screenshots
           path: cypress/screenshots
           retention-days: 7
 
@@ -71,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: cypress-videos-${{ matrix.containers }}
+          name: cypress-videos
           path: cypress/videos
           retention-days: 7
 
