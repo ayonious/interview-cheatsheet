@@ -28,9 +28,14 @@ describe('Homepage Tests', () => {
   })
 
   it('should display the hero section with correct content', () => {
-    cy.get('.hero').should('be.visible')
-    cy.get('.hero').should('contain.text', 'Interview Cheatsheet')
-    cy.get('.hero').should('contain.text', 'Collection of my interview questions for interview')
+    // The hero content is in the PageHeadLine component
+    cy.get('main').should('be.visible')
+    cy.get('main').should('contain.text', 'Collection')
+    cy.get('main').should('contain.text', 'Tech Interviews')
+    cy.get('main').should('contain.text', 'cheat sheet')
+    
+    // Check for the START button
+    cy.get('a').contains('START').should('be.visible')
   })
 
   it('should be responsive across different screen sizes', () => {
@@ -43,7 +48,7 @@ describe('Homepage Tests', () => {
     viewports.forEach(([width, height]) => {
       cy.viewport(width, height)
       cy.get('nav').should('be.visible')
-      cy.get('.hero').should('be.visible')
+      cy.get('main').should('be.visible')
       cy.wait(500) // Allow time for responsive changes
     })
   })

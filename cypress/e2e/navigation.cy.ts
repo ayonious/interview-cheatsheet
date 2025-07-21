@@ -8,7 +8,7 @@ describe('Navigation Tests', () => {
   it('should navigate to Backend section', () => {
     cy.get('nav').contains('Backend').click()
     cy.url().should('include', '/backend/')
-    cy.get('h1').should('contain.text', 'Databases')
+    cy.get('h1').should('contain.text', 'Database')
   })
 
   it('should navigate to Frontend section', () => {

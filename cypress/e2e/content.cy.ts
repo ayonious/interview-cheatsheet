@@ -69,12 +69,29 @@ describe('Content Tests', () => {
   })
 
   describe('Behavior Documentation', () => {
-    it('should display behavioral questions content', () => {
-      cy.visit('/behavior/BehavioralQuestions')
-      cy.get('h1').should('contain.text', 'Behavioral Interview Questions')
+    it('should display STAR method content', () => {
+      cy.visit('/behavior/StarMethod')
+      cy.get('h1').should('contain.text', 'STAR Method')
       cy.get('main').should('contain.text', 'STAR')
+      cy.get('main').should('contain.text', 'Situation')
+      cy.get('main').should('contain.text', 'Task')
+      cy.get('main').should('contain.text', 'Action')
+      cy.get('main').should('contain.text', 'Result')
+    })
+
+    it('should display common questions content', () => {
+      cy.visit('/behavior/CommonQuestions')
+      cy.get('h1').should('contain.text', 'Common Behavioral Questions')
       cy.get('main').should('contain.text', 'deadline')
       cy.get('main').should('contain.text', 'ownership')
+      cy.get('main').should('contain.text', 'Alternative Variations')
+    })
+
+    it('should display interview tips content', () => {
+      cy.visit('/behavior/InterviewTips')
+      cy.get('h1').should('contain.text', 'Interview Tips')
+      cy.get('main').should('contain.text', 'Story Bank')
+      cy.get('main').should('contain.text', 'preparation')
     })
   })
 
