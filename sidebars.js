@@ -1,7 +1,7 @@
 module.exports = {
   Backend: {
     Databases: ["backend/Databases", "backend/DatabasesScaling", "backend/Lock"],
-    SystemDesign: ["backend/DesignSummary"],
+    SystemDesign: ["backend/DesignSummary", "backend/SystemDesignExamples", "backend/SystemDesign-ChatApp", "backend/SystemDesign-Instagram", "backend/SystemDesign-RideSharing", "backend/SystemDesign-URLShortener"],
     SoftwareDevProcess: ["backend/SoftDevPractices", "backend/DistributedTransaction"],
     JS: ["backend/Eventloop", "backend/AsyncVsThreading", "backend/MultiThreadVsMultiProcess"],
     "Programming Languages": ["backend/ProgrammingLanguageTypes", "backend/ObjectOrientedProgramming"],
