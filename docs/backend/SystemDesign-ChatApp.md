@@ -57,120 +57,112 @@ Design a real-time messaging system that supports billions of users with instant
 ## Core Components
 
 ### 1. Connection Management Service
-```python
-class ConnectionManager:
-    def __init__(self):
-        self.user_connections = {}  # user_id -> websocket_connection
-        self.connection_metadata = {}  # connection_id -> user_info
+```
+CLASS ConnectionManager:
+    INITIALIZE:
+        user_connections = MAP<user_id, websocket_connection>
+        connection_metadata = MAP<connection_id, user_info>
     
-    async def handle_connection(self, websocket, user_id):
-        connection_id = str(uuid.uuid4())
-        self.user_connections[user_id] = websocket
-        self.connection_metadata[connection_id] = {
-            'user_id': user_id,
-            'connected_at': datetime.now(),
-            'last_activity': datetime.now()
+    FUNCTION handle_connection(websocket, user_id):
+        connection_id = generate_unique_id()
+        user_connections[user_id] = websocket
+        connection_metadata[connection_id] = {
+            user_id: user_id,
+            connected_at: current_timestamp(),
+            last_activity: current_timestamp()
         }
         
-        # Update user online status
-        await self.update_user_presence(user_id, 'online')
+        UPDATE user_presence(user_id, 'online')
     
-    async def send_message_to_user(self, user_id, message):
-        if user_id in self.user_connections:
-            await self.user_connections[user_id].send(json.dumps(message))
-            return True
-        return False  # User offline
+    FUNCTION send_message_to_user(user_id, message):
+        IF user_id EXISTS IN user_connections:
+            SEND message TO user_connections[user_id]
+            RETURN success
+        RETURN failure  // User offline
 ```
 
 ### 2. Message Service
-```python
-class MessageService:
-    def __init__(self):
-        self.message_queue = MessageQueue()
-        self.db = MessageDatabase()
+```
+CLASS MessageService:
+    INITIALIZE:
+        message_queue = MessageQueue()
+        database = MessageDatabase()
     
-    async def send_message(self, sender_id, recipient_id, content, message_type='text'):
+    FUNCTION send_message(sender_id, recipient_id, content, message_type):
         message = {
-            'id': str(uuid.uuid4()),
-            'conversation_id': self.get_conversation_id(sender_id, recipient_id),
-            'sender_id': sender_id,
-            'content': content,
-            'message_type': message_type,
-            'timestamp': datetime.now().isoformat(),
-            'status': 'sent'
+            id: generate_unique_id(),
+            conversation_id: get_conversation_id(sender_id, recipient_id),
+            sender_id: sender_id,
+            content: content,
+            message_type: message_type,
+            timestamp: current_timestamp(),
+            status: 'sent'
         }
         
-        # Store in database
-        await self.db.store_message(message)
+        // Store in database
+        database.store_message(message)
         
-        # Queue for delivery
-        await self.message_queue.enqueue('message_delivery', message)
+        // Queue for delivery
+        message_queue.enqueue('message_delivery', message)
         
-        return message
+        RETURN message
 ```
 
 ### 3. Database Schema
-```sql
--- Users table
-CREATE TABLE users (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    phone_number VARCHAR(15) UNIQUE NOT NULL,
-    username VARCHAR(50),
-    profile_image_url TEXT,
-    last_seen TIMESTAMP,
-    status ENUM('online', 'offline', 'away') DEFAULT 'offline',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+```
+// Users table
+TABLE users:
+    id: BIGINT (PRIMARY KEY, AUTO_INCREMENT)
+    phone_number: STRING (UNIQUE, NOT NULL)
+    username: STRING
+    profile_image_url: TEXT
+    last_seen: TIMESTAMP
+    status: ENUM('online', 'offline', 'away')
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
 
--- Conversations table
-CREATE TABLE conversations (
-    id UUID PRIMARY KEY,
-    type ENUM('direct', 'group') NOT NULL,
-    name VARCHAR(100),  -- For group chats
-    created_by BIGINT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+// Conversations table
+TABLE conversations:
+    id: UUID (PRIMARY KEY)
+    type: ENUM('direct', 'group')
+    name: STRING  // For group chats
+    created_by: BIGINT
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
 
--- Messages table (partitioned by conversation_id)
-CREATE TABLE messages (
-    id UUID PRIMARY KEY,
-    conversation_id UUID NOT NULL,
-    sender_id BIGINT NOT NULL,
-    content TEXT,
-    message_type ENUM('text', 'image', 'video', 'document', 'audio') DEFAULT 'text',
-    file_url TEXT,  -- For media messages
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    edited_at TIMESTAMP NULL,
-    deleted_at TIMESTAMP NULL,
-    INDEX idx_conversation_time (conversation_id, created_at),
-    INDEX idx_sender (sender_id),
-    FOREIGN KEY (conversation_id) REFERENCES conversations(id),
-    FOREIGN KEY (sender_id) REFERENCES users(id)
-) PARTITION BY HASH(conversation_id) PARTITIONS 100;
+// Messages table (partitioned by conversation_id)
+TABLE messages:
+    id: UUID (PRIMARY KEY)
+    conversation_id: UUID (FOREIGN KEY)
+    sender_id: BIGINT (FOREIGN KEY)
+    content: TEXT
+    message_type: ENUM('text', 'image', 'video', 'document', 'audio')
+    file_url: TEXT  // For media messages
+    created_at: TIMESTAMP
+    edited_at: TIMESTAMP (NULLABLE)
+    deleted_at: TIMESTAMP (NULLABLE)
+    
+    INDEXES:
+        (conversation_id, created_at)
+        (sender_id)
+    
+    PARTITIONING: HASH(conversation_id) INTO 100 PARTITIONS
 
--- Message delivery status
-CREATE TABLE message_status (
-    message_id UUID,
-    user_id BIGINT,
-    status ENUM('sent', 'delivered', 'read') DEFAULT 'sent',
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (message_id, user_id),
-    FOREIGN KEY (message_id) REFERENCES messages(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
+// Message delivery status
+TABLE message_status:
+    message_id: UUID (FOREIGN KEY)
+    user_id: BIGINT (FOREIGN KEY)
+    status: ENUM('sent', 'delivered', 'read')
+    updated_at: TIMESTAMP
+    PRIMARY KEY: (message_id, user_id)
 
--- Conversation participants
-CREATE TABLE conversation_participants (
-    conversation_id UUID,
-    user_id BIGINT,
-    role ENUM('admin', 'member') DEFAULT 'member',
-    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    left_at TIMESTAMP NULL,
-    PRIMARY KEY (conversation_id, user_id),
-    FOREIGN KEY (conversation_id) REFERENCES conversations(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
+// Conversation participants
+TABLE conversation_participants:
+    conversation_id: UUID (FOREIGN KEY)
+    user_id: BIGINT (FOREIGN KEY)
+    role: ENUM('admin', 'member')
+    joined_at: TIMESTAMP
+    left_at: TIMESTAMP (NULLABLE)
+    PRIMARY KEY: (conversation_id, user_id)
 ```
 
 ## Detailed Questions & Answers
@@ -180,76 +172,69 @@ CREATE TABLE conversation_participants (
 **Answer**: Multi-layered approach with WebSockets and fallback mechanisms:
 
 **1. WebSocket Connection Management**
-```python
-class WebSocketManager:
-    def __init__(self):
-        self.connections = {}  # user_id -> websocket
-        self.heartbeat_interval = 30  # seconds
+```
+CLASS WebSocketManager:
+    INITIALIZE:
+        connections = MAP<user_id, websocket>
+        heartbeat_interval = 30 seconds
     
-    async def maintain_connection(self, user_id, websocket):
-        try:
-            while True:
-                # Send heartbeat
-                await websocket.ping()
-                await asyncio.sleep(self.heartbeat_interval)
-                
-        except websockets.exceptions.ConnectionClosed:
-            await self.handle_disconnect(user_id)
+    FUNCTION maintain_connection(user_id, websocket):
+        TRY:
+            WHILE connection_active:
+                // Send heartbeat
+                SEND ping TO websocket
+                WAIT heartbeat_interval
+        CATCH connection_closed:
+            CALL handle_disconnect(user_id)
     
-    async def send_message(self, user_id, message):
-        if user_id in self.connections:
-            try:
-                await self.connections[user_id].send(json.dumps(message))
-                return True
-            except:
-                # Connection broken, clean up
-                await self.handle_disconnect(user_id)
-        return False
+    FUNCTION send_message(user_id, message):
+        IF user_id EXISTS IN connections:
+            TRY:
+                SEND message TO connections[user_id]
+                RETURN success
+            CATCH connection_error:
+                // Connection broken, clean up
+                CALL handle_disconnect(user_id)
+        RETURN failure
 ```
 
 **2. Message Queue for Reliable Delivery**
-```python
-import asyncio
-from kafka import KafkaProducer, KafkaConsumer
-
-class MessageDeliveryService:
-    def __init__(self):
-        self.producer = KafkaProducer(
-            bootstrap_servers=['kafka1:9092', 'kafka2:9092'],
-            value_serializer=lambda v: json.dumps(v).encode()
-        )
+```
+CLASS MessageDeliveryService:
+    INITIALIZE:
+        message_queue = MessageQueue(servers: [kafka1, kafka2])
         
-    async def deliver_message(self, message):
-        recipient_id = message['recipient_id']
+    FUNCTION deliver_message(message):
+        recipient_id = message.recipient_id
         
-        # Try WebSocket first
-        if await self.websocket_manager.send_message(recipient_id, message):
-            await self.update_status(message['id'], 'delivered')
-            return
+        // Try WebSocket first
+        IF websocket_manager.send_message(recipient_id, message):
+            update_status(message.id, 'delivered')
+            RETURN
         
-        # User offline - queue for later delivery
-        self.producer.send('offline_messages', {
-            'user_id': recipient_id,
-            'message': message,
-            'retry_count': 0
+        // User offline - queue for later delivery
+        message_queue.enqueue('offline_messages', {
+            user_id: recipient_id,
+            message: message,
+            retry_count: 0
         })
         
-        # Send push notification
-        await self.notification_service.send_push(recipient_id, message)
+        // Send push notification
+        notification_service.send_push(recipient_id, message)
 ```
 
 **3. Offline Message Handling**
-```python
-class OfflineMessageHandler:
-    async def handle_user_online(self, user_id):
-        # Deliver queued messages when user comes online
-        queued_messages = await self.get_queued_messages(user_id)
+```
+CLASS OfflineMessageHandler:
+    FUNCTION handle_user_online(user_id):
+        // Deliver queued messages when user comes online
+        queued_messages = get_queued_messages(user_id)
         
-        for message in queued_messages:
-            success = await self.websocket_manager.send_message(user_id, message)
-            if success:
-                await self.mark_message_delivered(message['id'])
-                await self.remove_from_queue(user_id, message['id'])
+        FOR EACH message IN queued_messages:
+            success = websocket_manager.send_message(user_id, message)
+            IF success:
+                mark_message_delivered(message.id)
+                remove_from_queue(user_id, message.id)
 ```
 
 ### Q2: How do you handle group messaging efficiently?
@@ -257,79 +242,73 @@ class OfflineMessageHandler:
 **Answer**: Optimized fanout strategies based on group size:
 
 **1. Small Groups (< 100 members) - Direct Fanout**
-```python
-class GroupMessageHandler:
-    async def send_group_message(self, group_id, sender_id, message):
-        participants = await self.db.get_active_participants(group_id)
+```
+CLASS GroupMessageHandler:
+    FUNCTION send_group_message(group_id, sender_id, message):
+        participants = database.get_active_participants(group_id)
         
-        # Create message record
-        message_record = await self.db.store_group_message(
-            group_id, sender_id, message
-        )
+        // Create message record
+        message_record = database.store_group_message(group_id, sender_id, message)
         
-        # Fan out to all participants
+        // Fan out to all participants
         delivery_tasks = []
-        for participant_id in participants:
-            if participant_id != sender_id:  # Don't send to sender
-                task = self.deliver_to_participant(participant_id, message_record)
-                delivery_tasks.append(task)
+        FOR EACH participant_id IN participants:
+            IF participant_id != sender_id:  // Don't send to sender
+                task = deliver_to_participant(participant_id, message_record)
+                ADD task TO delivery_tasks
         
-        # Execute deliveries concurrently
-        await asyncio.gather(*delivery_tasks, return_exceptions=True)
+        // Execute deliveries concurrently
+        EXECUTE ALL delivery_tasks IN PARALLEL
 ```
 
 **2. Large Groups (100+ members) - Queue-Based Fanout**
-```python
-class LargeGroupHandler:
-    async def send_large_group_message(self, group_id, sender_id, message):
-        # Store message once
-        message_record = await self.db.store_group_message(
-            group_id, sender_id, message
-        )
+```
+CLASS LargeGroupHandler:
+    FUNCTION send_large_group_message(group_id, sender_id, message):
+        // Store message once
+        message_record = database.store_group_message(group_id, sender_id, message)
         
-        # Queue fanout job
+        // Queue fanout job
         fanout_job = {
-            'group_id': group_id,
-            'message_id': message_record['id'],
-            'sender_id': sender_id,
-            'total_participants': len(await self.db.get_participants(group_id))
+            group_id: group_id,
+            message_id: message_record.id,
+            sender_id: sender_id,
+            total_participants: COUNT(database.get_participants(group_id))
         }
         
-        await self.message_queue.enqueue('group_fanout', fanout_job)
+        message_queue.enqueue('group_fanout', fanout_job)
         
-        # Return immediately to sender
-        return message_record
+        // Return immediately to sender
+        RETURN message_record
     
-    async def process_group_fanout(self, job):
-        participants = await self.db.get_active_participants(job['group_id'])
+    FUNCTION process_group_fanout(job):
+        participants = database.get_active_participants(job.group_id)
         batch_size = 1000
         
-        # Process in batches to avoid overwhelming the system
-        for i in range(0, len(participants), batch_size):
-            batch = participants[i:i + batch_size]
-            await self.fanout_to_batch(job['message_id'], batch)
-            await asyncio.sleep(0.1)  # Small delay between batches
+        // Process in batches to avoid overwhelming the system
+        FOR i = 0 TO LENGTH(participants) STEP batch_size:
+            batch = participants[i : i + batch_size]
+            fanout_to_batch(job.message_id, batch)
+            WAIT 0.1 seconds  // Small delay between batches
 ```
 
 **3. Group Message Status Tracking**
-```python
-async def track_group_message_status(self, message_id, group_id):
-    total_participants = await self.db.count_participants(group_id)
+```
+FUNCTION track_group_message_status(message_id, group_id):
+    total_participants = database.count_participants(group_id)
     
-    status_summary = await self.db.query("""
-        SELECT 
-            status,
-            COUNT(*) as count
+    status_summary = database.query("
+        SELECT status, COUNT(*) as count
         FROM message_status 
-        WHERE message_id = %s 
+        WHERE message_id = message_id
         GROUP BY status
-    """, message_id)
+    ")
     
-    return {
-        'total': total_participants,
-        'delivered': status_summary.get('delivered', 0),
-        'read': status_summary.get('read', 0),
-        'pending': total_participants - sum(status_summary.values())
+    RETURN {
+        total: total_participants,
+        delivered: status_summary['delivered'] OR 0,
+        read: status_summary['read'] OR 0,
+        pending: total_participants - SUM(status_summary.values())
     }
 ```
 
@@ -338,85 +317,77 @@ async def track_group_message_status(self, message_id, group_id):
 **Answer**: Vector clocks and sequence numbers for ordering:
 
 **1. Message Sequence Numbers**
-```python
-class MessageOrderingService:
-    def __init__(self):
-        self.sequence_counters = {}  # conversation_id -> counter
-        self.lock = asyncio.Lock()
+```
+CLASS MessageOrderingService:
+    INITIALIZE:
+        sequence_counters = MAP<conversation_id, counter>
+        lock = MUTEX
     
-    async def get_next_sequence(self, conversation_id):
-        async with self.lock:
-            if conversation_id not in self.sequence_counters:
-                # Initialize from database
-                last_seq = await self.db.get_last_sequence(conversation_id)
-                self.sequence_counters[conversation_id] = last_seq + 1
-            else:
-                self.sequence_counters[conversation_id] += 1
+    FUNCTION get_next_sequence(conversation_id):
+        ACQUIRE lock:
+            IF conversation_id NOT IN sequence_counters:
+                // Initialize from database
+                last_seq = database.get_last_sequence(conversation_id)
+                sequence_counters[conversation_id] = last_seq + 1
+            ELSE:
+                sequence_counters[conversation_id] = sequence_counters[conversation_id] + 1
             
-            return self.sequence_counters[conversation_id]
+            RETURN sequence_counters[conversation_id]
     
-    async def send_ordered_message(self, conversation_id, sender_id, content):
-        sequence_num = await self.get_next_sequence(conversation_id)
+    FUNCTION send_ordered_message(conversation_id, sender_id, content):
+        sequence_num = get_next_sequence(conversation_id)
         
         message = {
-            'id': str(uuid.uuid4()),
-            'conversation_id': conversation_id,
-            'sender_id': sender_id,
-            'content': content,
-            'sequence_number': sequence_num,
-            'timestamp': datetime.now().isoformat()
+            id: generate_unique_id(),
+            conversation_id: conversation_id,
+            sender_id: sender_id,
+            content: content,
+            sequence_number: sequence_num,
+            timestamp: current_timestamp()
         }
         
-        return await self.db.store_message(message)
+        RETURN database.store_message(message)
 ```
 
 **2. Client-Side Ordering**
-```javascript
-class MessageBuffer {
-    constructor() {
-        this.expectedSequence = {};  // conversation_id -> next expected sequence
-        this.bufferedMessages = {};  // conversation_id -> [messages]
-    }
+```
+CLASS MessageBuffer:
+    INITIALIZE:
+        expected_sequence = MAP<conversation_id, next_expected_sequence>
+        buffered_messages = MAP<conversation_id, LIST<message>>
     
-    receiveMessage(message) {
-        const conversationId = message.conversation_id;
-        const expectedSeq = this.expectedSequence[conversationId] || 1;
+    FUNCTION receive_message(message):
+        conversation_id = message.conversation_id
+        expected_seq = expected_sequence[conversation_id] OR 1
         
-        if (message.sequence_number === expectedSeq) {
+        IF message.sequence_number == expected_seq:
             // Message is in order, process it
-            this.processMessage(message);
-            this.expectedSequence[conversationId] = expectedSeq + 1;
+            process_message(message)
+            expected_sequence[conversation_id] = expected_seq + 1
             
             // Check if any buffered messages can now be processed
-            this.processBufferedMessages(conversationId);
-        } else {
+            process_buffered_messages(conversation_id)
+        ELSE:
             // Out of order message, buffer it
-            if (!this.bufferedMessages[conversationId]) {
-                this.bufferedMessages[conversationId] = [];
-            }
-            this.bufferedMessages[conversationId].push(message);
-        }
-    }
+            IF conversation_id NOT IN buffered_messages:
+                buffered_messages[conversation_id] = []
+            buffered_messages[conversation_id].ADD(message)
     
-    processBufferedMessages(conversationId) {
-        const buffered = this.bufferedMessages[conversationId] || [];
-        const expectedSeq = this.expectedSequence[conversationId];
+    FUNCTION process_buffered_messages(conversation_id):
+        buffered = buffered_messages[conversation_id] OR []
+        expected_seq = expected_sequence[conversation_id]
         
         // Sort and process any messages that are now in order
-        buffered.sort((a, b) => a.sequence_number - b.sequence_number);
+        SORT buffered BY sequence_number ASCENDING
         
-        for (let i = 0; i < buffered.length; i++) {
-            if (buffered[i].sequence_number === this.expectedSequence[conversationId]) {
-                this.processMessage(buffered[i]);
-                this.expectedSequence[conversationId]++;
-                buffered.splice(i, 1);
-                i--; // Adjust index after removal
-            } else {
-                break; // Stop if we hit a gap
-            }
-        }
-    }
-}
+        FOR i = 0 TO LENGTH(buffered):
+            IF buffered[i].sequence_number == expected_sequence[conversation_id]:
+                process_message(buffered[i])
+                expected_sequence[conversation_id]++
+                REMOVE buffered[i]
+                i--  // Adjust index after removal
+            ELSE:
+                BREAK  // Stop if we hit a gap
 ```
 
 ### Q4: How do you handle media file sharing at scale?
@@ -424,116 +395,108 @@ class MessageBuffer {
 **Answer**: Distributed storage with CDN and optimization:
 
 **1. Media Upload Service**
-```python
-class MediaUploadService:
-    def __init__(self):
-        self.s3_client = boto3.client('s3')
-        self.cdn_url = 'https://cdn.chatapp.com'
+```
+CLASS MediaUploadService:
+    INITIALIZE:
+        cloud_storage_client = CloudStorageClient()
+        cdn_url = 'https://cdn.chatapp.com'
         
-    async def upload_media(self, user_id, file_data, file_type):
-        # Generate unique file name
-        file_id = str(uuid.uuid4())
-        file_extension = self.get_extension(file_type)
-        s3_key = f"media/{user_id}/{file_id}.{file_extension}"
+    FUNCTION upload_media(user_id, file_data, file_type):
+        // Generate unique file name
+        file_id = generate_unique_id()
+        file_extension = get_extension(file_type)
+        storage_key = "media/" + user_id + "/" + file_id + "." + file_extension
         
-        # Compress/optimize based on type
-        processed_data = await self.process_media(file_data, file_type)
+        // Compress/optimize based on type
+        processed_data = process_media(file_data, file_type)
         
-        # Upload to S3 with encryption
-        await self.s3_client.put_object(
-            Bucket='chatapp-media',
-            Key=s3_key,
-            Body=processed_data,
-            ContentType=file_type,
-            ServerSideEncryption='AES256',
-            Metadata={
-                'uploaded_by': str(user_id),
-                'upload_time': str(datetime.now())
+        // Upload to cloud storage with encryption
+        cloud_storage_client.upload_object({
+            bucket: 'chatapp-media',
+            key: storage_key,
+            data: processed_data,
+            content_type: file_type,
+            encryption: 'AES256',
+            metadata: {
+                uploaded_by: user_id,
+                upload_time: current_timestamp()
             }
+        })
+        
+        // Generate CDN URL
+        media_url = cdn_url + "/" + storage_key
+        
+        // Store metadata in database
+        media_record = database.store_media_metadata(
+            file_id, user_id, storage_key, media_url, file_type, SIZE(processed_data)
         )
         
-        # Generate CDN URL
-        media_url = f"{self.cdn_url}/{s3_key}"
-        
-        # Store metadata in database
-        media_record = await self.db.store_media_metadata(
-            file_id, user_id, s3_key, media_url, file_type, len(processed_data)
-        )
-        
-        return media_record
+        RETURN media_record
     
-    async def process_media(self, file_data, file_type):
-        if file_type.startswith('image/'):
-            return await self.compress_image(file_data)
-        elif file_type.startswith('video/'):
-            return await self.compress_video(file_data)
-        else:
-            return file_data  # Documents, audio - no compression
+    FUNCTION process_media(file_data, file_type):
+        IF file_type STARTS_WITH 'image/':
+            RETURN compress_image(file_data)
+        ELSE IF file_type STARTS_WITH 'video/':
+            RETURN compress_video(file_data)
+        ELSE:
+            RETURN file_data  // Documents, audio - no compression
 ```
 
 **2. Media Message Handling**
-```python
-async def send_media_message(self, sender_id, recipient_id, file_data, file_type):
-    # Upload media first
-    media_record = await self.media_service.upload_media(
-        sender_id, file_data, file_type
-    )
+```
+FUNCTION send_media_message(sender_id, recipient_id, file_data, file_type):
+    // Upload media first
+    media_record = media_service.upload_media(sender_id, file_data, file_type)
     
-    # Create message with media reference
+    // Create message with media reference
     message = {
-        'id': str(uuid.uuid4()),
-        'conversation_id': self.get_conversation_id(sender_id, recipient_id),
-        'sender_id': sender_id,
-        'message_type': 'media',
-        'media_id': media_record['id'],
-        'media_url': media_record['url'],
-        'media_type': file_type,
-        'file_size': media_record['size'],
-        'thumbnail_url': media_record.get('thumbnail_url'),  # For images/videos
-        'timestamp': datetime.now().isoformat()
+        id: generate_unique_id(),
+        conversation_id: get_conversation_id(sender_id, recipient_id),
+        sender_id: sender_id,
+        message_type: 'media',
+        media_id: media_record.id,
+        media_url: media_record.url,
+        media_type: file_type,
+        file_size: media_record.size,
+        thumbnail_url: media_record.thumbnail_url,  // For images/videos
+        timestamp: current_timestamp()
     }
     
-    return await self.send_message(message)
+    RETURN send_message(message)
 ```
 
 **3. Progressive Media Loading**
-```javascript
-class MediaMessageHandler {
-    async displayMediaMessage(message) {
-        const mediaContainer = document.createElement('div');
+```
+CLASS MediaMessageHandler:
+    FUNCTION display_media_message(message):
+        media_container = CREATE_UI_ELEMENT('div')
         
-        if (message.media_type.startsWith('image/')) {
+        IF message.media_type STARTS_WITH 'image/':
             // Show thumbnail first, full image on click
-            const thumbnail = document.createElement('img');
-            thumbnail.src = message.thumbnail_url;
-            thumbnail.onclick = () => this.showFullImage(message.media_url);
-            mediaContainer.appendChild(thumbnail);
+            thumbnail = CREATE_UI_ELEMENT('img')
+            thumbnail.source = message.thumbnail_url
+            thumbnail.on_click = show_full_image(message.media_url)
+            media_container.ADD_CHILD(thumbnail)
             
-        } else if (message.media_type.startsWith('video/')) {
+        ELSE IF message.media_type STARTS_WITH 'video/':
             // Show video player with poster
-            const video = document.createElement('video');
-            video.poster = message.thumbnail_url;
-            video.controls = true;
-            video.preload = 'metadata';  // Only load metadata initially
-            video.src = message.media_url;
-            mediaContainer.appendChild(video);
-        }
+            video = CREATE_UI_ELEMENT('video')
+            video.poster = message.thumbnail_url
+            video.controls = true
+            video.preload = 'metadata'  // Only load metadata initially
+            video.source = message.media_url
+            media_container.ADD_CHILD(video)
         
-        return mediaContainer;
-    }
+        RETURN media_container
     
-    async preloadMedia(conversationId) {
+    FUNCTION preload_media(conversation_id):
         // Preload media for recent messages in background
-        const recentMessages = await this.getRecentMediaMessages(conversationId, 10);
+        recent_messages = get_recent_media_messages(conversation_id, 10)
         
-        for (const message of recentMessages) {
-            if (message.media_type.startsWith('image/')) {
-                const img = new Image();
-                img.src = message.media_url;  // Triggers browser caching
-            }
-        }
-    }
-}
+        FOR EACH message IN recent_messages:
+            IF message.media_type STARTS_WITH 'image/':
+                // Triggers browser/client caching
+                PRELOAD_IMAGE(message.media_url)
 ```
 
 ### Q5: How do you implement end-to-end encryption?
@@ -541,87 +504,75 @@ class MediaMessageHandler {
 **Answer**: Signal Protocol implementation with key management:
 
 **1. Key Generation and Exchange**
-```python
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import x25519
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-
-class E2EEncryption:
-    def __init__(self):
-        self.identity_key = x25519.X25519PrivateKey.generate()
-        self.public_identity_key = self.identity_key.public_key()
+```
+CLASS E2EEncryption:
+    INITIALIZE:
+        identity_key = GENERATE_PRIVATE_KEY(X25519)
+        public_identity_key = GET_PUBLIC_KEY(identity_key)
     
-    def generate_prekeys(self, count=100):
+    FUNCTION generate_prekeys(count):
         prekeys = []
-        for i in range(count):
-            private_key = x25519.X25519PrivateKey.generate()
-            public_key = private_key.public_key()
+        FOR i = 0 TO count:
+            private_key = GENERATE_PRIVATE_KEY(X25519)
+            public_key = GET_PUBLIC_KEY(private_key)
             
             prekey_record = {
-                'id': i,
-                'private_key': private_key,
-                'public_key': public_key,
-                'used': False
+                id: i,
+                private_key: private_key,
+                public_key: public_key,
+                used: false
             }
-            prekeys.append(prekey_record)
+            prekeys.ADD(prekey_record)
         
-        return prekeys
+        RETURN prekeys
     
-    def initiate_session(self, recipient_identity_key, recipient_prekey):
-        # Generate ephemeral key pair
-        ephemeral_key = x25519.X25519PrivateKey.generate()
+    FUNCTION initiate_session(recipient_identity_key, recipient_prekey):
+        // Generate ephemeral key pair
+        ephemeral_key = GENERATE_PRIVATE_KEY(X25519)
         
-        # Perform Triple Diffie-Hellman
-        dh1 = self.identity_key.exchange(recipient_prekey)
-        dh2 = ephemeral_key.exchange(recipient_identity_key)
-        dh3 = ephemeral_key.exchange(recipient_prekey)
+        // Perform Triple Diffie-Hellman
+        dh1 = DIFFIE_HELLMAN_EXCHANGE(identity_key, recipient_prekey)
+        dh2 = DIFFIE_HELLMAN_EXCHANGE(ephemeral_key, recipient_identity_key)
+        dh3 = DIFFIE_HELLMAN_EXCHANGE(ephemeral_key, recipient_prekey)
         
-        # Derive root key
-        root_key_material = dh1 + dh2 + dh3
-        root_key = HKDF(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=b'',
-            info=b'TextSecure'
-        ).derive(root_key_material)
+        // Derive root key
+        root_key_material = CONCATENATE(dh1, dh2, dh3)
+        root_key = DERIVE_KEY_HKDF(root_key_material, algorithm: SHA256, length: 32)
         
-        return {
-            'root_key': root_key,
-            'ephemeral_public': ephemeral_key.public_key()
+        RETURN {
+            root_key: root_key,
+            ephemeral_public: GET_PUBLIC_KEY(ephemeral_key)
         }
 ```
 
 **2. Message Encryption/Decryption**
-```python
-from cryptography.fernet import Fernet
-import base64
-
-class MessageEncryption:
-    def __init__(self, session_key):
-        self.session_key = session_key
-        self.cipher = Fernet(base64.urlsafe_b64encode(session_key))
+```
+CLASS MessageEncryption:
+    INITIALIZE:
+        session_key = PROVIDED_SESSION_KEY
+        cipher = CREATE_CIPHER(session_key)
     
-    def encrypt_message(self, plaintext):
-        encrypted_data = self.cipher.encrypt(plaintext.encode())
-        return {
-            'ciphertext': base64.b64encode(encrypted_data).decode(),
-            'message_keys': self.get_current_message_keys()
+    FUNCTION encrypt_message(plaintext):
+        encrypted_data = cipher.encrypt(plaintext)
+        RETURN {
+            ciphertext: BASE64_ENCODE(encrypted_data),
+            message_keys: get_current_message_keys()
         }
     
-    def decrypt_message(self, encrypted_message):
-        try:
-            ciphertext = base64.b64decode(encrypted_message['ciphertext'])
-            plaintext = self.cipher.decrypt(ciphertext)
-            return plaintext.decode()
-        except Exception:
-            raise DecryptionError("Failed to decrypt message")
+    FUNCTION decrypt_message(encrypted_message):
+        TRY:
+            ciphertext = BASE64_DECODE(encrypted_message.ciphertext)
+            plaintext = cipher.decrypt(ciphertext)
+            RETURN plaintext
+        CATCH decryption_error:
+            THROW DecryptionError("Failed to decrypt message")
     
-    def get_current_message_keys(self):
-        # Implement Double Ratchet algorithm
-        # This is simplified - real implementation would be more complex
-        return {
-            'chain_key': self.derive_chain_key(),
-            'message_key': self.derive_message_key()
+    FUNCTION get_current_message_keys():
+        // Implement Double Ratchet algorithm
+        // This is simplified - real implementation would be more complex
+        RETURN {
+            chain_key: derive_chain_key(),
+            message_key: derive_message_key()
         }
 ```
 
@@ -630,73 +581,73 @@ class MessageEncryption:
 **Answer**: Batch processing and real-time status propagation:
 
 **1. Status Update Batching**
-```python
-class StatusUpdateService:
-    def __init__(self):
-        self.status_batch = {}
-        self.batch_size = 1000
-        self.flush_interval = 5  # seconds
+```
+CLASS StatusUpdateService:
+    INITIALIZE:
+        status_batch = MAP<string, status_update>
+        batch_size = 1000
+        flush_interval = 5 seconds
         
-    async def update_message_status(self, message_id, user_id, status):
-        key = f"{message_id}:{user_id}"
-        self.status_batch[key] = {
-            'message_id': message_id,
-            'user_id': user_id,
-            'status': status,
-            'timestamp': datetime.now()
+    FUNCTION update_message_status(message_id, user_id, status):
+        key = message_id + ":" + user_id
+        status_batch[key] = {
+            message_id: message_id,
+            user_id: user_id,
+            status: status,
+            timestamp: current_timestamp()
         }
         
-        if len(self.status_batch) >= self.batch_size:
-            await self.flush_status_updates()
+        IF SIZE(status_batch) >= batch_size:
+            flush_status_updates()
     
-    async def flush_status_updates(self):
-        if not self.status_batch:
-            return
+    FUNCTION flush_status_updates():
+        IF status_batch IS EMPTY:
+            RETURN
             
-        updates = list(self.status_batch.values())
-        self.status_batch.clear()
+        updates = VALUES(status_batch)
+        CLEAR status_batch
         
-        # Batch update database
-        await self.db.batch_update_status(updates)
+        // Batch update database
+        database.batch_update_status(updates)
         
-        # Notify senders about status changes
-        await self.notify_status_changes(updates)
+        // Notify senders about status changes
+        notify_status_changes(updates)
     
-    async def notify_status_changes(self, updates):
-        # Group by message sender for efficient notifications
-        sender_updates = {}
-        for update in updates:
-            message = await self.db.get_message(update['message_id'])
-            sender_id = message['sender_id']
+    FUNCTION notify_status_changes(updates):
+        // Group by message sender for efficient notifications
+        sender_updates = MAP<sender_id, LIST<update>>
+        FOR EACH update IN updates:
+            message = database.get_message(update.message_id)
+            sender_id = message.sender_id
             
-            if sender_id not in sender_updates:
+            IF sender_id NOT IN sender_updates:
                 sender_updates[sender_id] = []
-            sender_updates[sender_id].append(update)
+            sender_updates[sender_id].ADD(update)
         
-        # Send status updates to message senders
-        for sender_id, user_updates in sender_updates.items():
-            await self.websocket_manager.send_status_update(sender_id, user_updates)
+        // Send status updates to message senders
+        FOR EACH (sender_id, user_updates) IN sender_updates:
+            websocket_manager.send_status_update(sender_id, user_updates)
 ```
 
 **2. Read Receipt Handling**
-```python
-class ReadReceiptManager:
-    async def mark_conversation_read(self, user_id, conversation_id, last_read_message_id):
-        # Update user's read position
-        await self.db.update_read_position(user_id, conversation_id, last_read_message_id)
+```
+CLASS ReadReceiptManager:
+    FUNCTION mark_conversation_read(user_id, conversation_id, last_read_message_id):
+        // Update user's read position
+        database.update_read_position(user_id, conversation_id, last_read_message_id)
         
-        # Find all unread messages up to this point
-        unread_messages = await self.db.get_unread_messages(
+        // Find all unread messages up to this point
+        unread_messages = database.get_unread_messages(
             user_id, conversation_id, last_read_message_id
         )
         
-        # Batch mark as read
-        message_ids = [msg['id'] for msg in unread_messages]
-        await self.status_service.batch_mark_read(message_ids, user_id)
+        // Batch mark as read
+        message_ids = EXTRACT_IDS(unread_messages)
+        status_service.batch_mark_read(message_ids, user_id)
         
-        # Notify other participants in group chats
-        if await self.is_group_conversation(conversation_id):
-            await self.notify_group_read_status(conversation_id, user_id, last_read_message_id)
+        // Notify other participants in group chats
+        IF is_group_conversation(conversation_id):
+            notify_group_read_status(conversation_id, user_id, last_read_message_id)
 ```
 
 ### Q7: How do you implement push notifications for offline users?
@@ -704,117 +655,111 @@ class ReadReceiptManager:
 **Answer**: Multi-provider notification system with smart delivery:
 
 **1. Notification Service Architecture**
-```python
-class PushNotificationService:
-    def __init__(self):
-        self.apns_client = APNSClient()  # iOS
-        self.fcm_client = FCMClient()   # Android
-        self.web_push_client = WebPushClient()  # Web browsers
+```
+CLASS PushNotificationService:
+    INITIALIZE:
+        apns_client = APNSClient()  // iOS
+        fcm_client = FCMClient()   // Android
+        web_push_client = WebPushClient()  // Web browsers
         
-    async def send_message_notification(self, user_id, message):
-        user_devices = await self.db.get_user_devices(user_id)
+    FUNCTION send_message_notification(user_id, message):
+        user_devices = database.get_user_devices(user_id)
         
-        if not user_devices:
-            return False
+        IF user_devices IS EMPTY:
+            RETURN false
             
-        # Prepare notification content
-        notification = await self.prepare_notification(message)
+        // Prepare notification content
+        notification = prepare_notification(message)
         
-        # Send to all user devices
+        // Send to all user devices
         delivery_tasks = []
-        for device in user_devices:
-            task = self.send_to_device(device, notification)
-            delivery_tasks.append(task)
+        FOR EACH device IN user_devices:
+            task = send_to_device(device, notification)
+            delivery_tasks.ADD(task)
         
-        results = await asyncio.gather(*delivery_tasks, return_exceptions=True)
+        results = EXECUTE_ALL_PARALLEL(delivery_tasks)
         
-        # Track delivery success rates
-        successful = sum(1 for result in results if result and not isinstance(result, Exception))
-        await self.metrics.record_notification_delivery(user_id, len(user_devices), successful)
+        // Track delivery success rates
+        successful = COUNT_SUCCESSFUL(results)
+        metrics.record_notification_delivery(user_id, SIZE(user_devices), successful)
         
-        return successful > 0
+        RETURN successful > 0
     
-    async def prepare_notification(self, message):
-        sender_info = await self.db.get_user_info(message['sender_id'])
+    FUNCTION prepare_notification(message):
+        sender_info = database.get_user_info(message.sender_id)
         
-        # Customize notification based on message type
-        if message['message_type'] == 'text':
-            body = message['content'][:100] + ('...' if len(message['content']) > 100 else '')
-        elif message['message_type'] == 'media':
-            body = f"📸 {sender_info['name']} sent a photo"
-        else:
-            body = f"{sender_info['name']} sent a message"
+        // Customize notification based on message type
+        IF message.message_type == 'text':
+            body = TRUNCATE(message.content, 100)
+        ELSE IF message.message_type == 'media':
+            body = "📸 " + sender_info.name + " sent a photo"
+        ELSE:
+            body = sender_info.name + " sent a message"
         
-        return {
-            'title': sender_info['name'],
-            'body': body,
-            'badge': await self.get_unread_count(message['recipient_id']),
-            'data': {
-                'conversation_id': message['conversation_id'],
-                'message_id': message['id'],
-                'type': 'new_message'
+        RETURN {
+            title: sender_info.name,
+            body: body,
+            badge: get_unread_count(message.recipient_id),
+            data: {
+                conversation_id: message.conversation_id,
+                message_id: message.id,
+                type: 'new_message'
             }
         }
     
-    async def send_to_device(self, device, notification):
-        try:
-            if device['platform'] == 'ios':
-                return await self.apns_client.send_notification(
-                    device['token'], notification
-                )
-            elif device['platform'] == 'android':
-                return await self.fcm_client.send_notification(
-                    device['token'], notification
-                )
-            elif device['platform'] == 'web':
-                return await self.web_push_client.send_notification(
-                    device['token'], notification
-                )
-        except Exception as e:
-            # Log error and potentially remove invalid tokens
-            await self.handle_notification_error(device, e)
-            return False
+    FUNCTION send_to_device(device, notification):
+        TRY:
+            IF device.platform == 'ios':
+                RETURN apns_client.send_notification(device.token, notification)
+            ELSE IF device.platform == 'android':
+                RETURN fcm_client.send_notification(device.token, notification)
+            ELSE IF device.platform == 'web':
+                RETURN web_push_client.send_notification(device.token, notification)
+        CATCH exception:
+            // Log error and potentially remove invalid tokens
+            handle_notification_error(device, exception)
+            RETURN false
 ```
 
 **2. Smart Notification Delivery**
-```python
-class SmartNotificationManager:
-    async def should_send_notification(self, user_id, message):
-        # Check user notification preferences
-        prefs = await self.db.get_notification_preferences(user_id)
+```
+CLASS SmartNotificationManager:
+    FUNCTION should_send_notification(user_id, message):
+        // Check user notification preferences
+        prefs = database.get_notification_preferences(user_id)
         
-        if not prefs['enabled']:
-            return False
+        IF NOT prefs.enabled:
+            RETURN false
             
-        # Check do not disturb hours
-        user_timezone = prefs.get('timezone', 'UTC')
-        current_time = datetime.now(pytz.timezone(user_timezone))
+        // Check do not disturb hours
+        user_timezone = prefs.timezone OR 'UTC'
+        current_time = GET_CURRENT_TIME(user_timezone)
         
-        if prefs.get('do_not_disturb'):
-            dnd_start = prefs['dnd_start_time']
-            dnd_end = prefs['dnd_end_time']
+        IF prefs.do_not_disturb:
+            dnd_start = prefs.dnd_start_time
+            dnd_end = prefs.dnd_end_time
             
-            if self.is_in_dnd_period(current_time, dnd_start, dnd_end):
-                return False
+            IF is_in_dnd_period(current_time, dnd_start, dnd_end):
+                RETURN false
         
-        # Check if user is currently active
-        last_activity = await self.presence_service.get_last_activity(user_id)
-        if last_activity and (datetime.now() - last_activity).seconds < 30:
-            return False  # User is likely actively using the app
+        // Check if user is currently active
+        last_activity = presence_service.get_last_activity(user_id)
+        IF last_activity AND (current_time - last_activity) < 30 seconds:
+            RETURN false  // User is likely actively using the app
         
-        # Check message priority (e.g., group mentions)
-        if await self.is_high_priority_message(message):
-            return True
+        // Check message priority (e.g., group mentions)
+        IF is_high_priority_message(message):
+            RETURN true
             
-        return True
+        RETURN true
     
-    async def batch_process_notifications(self):
-        # Process notifications in batches to avoid overwhelming the system
-        pending_notifications = await self.db.get_pending_notifications(limit=10000)
+    FUNCTION batch_process_notifications():
+        // Process notifications in batches to avoid overwhelming the system
+        pending_notifications = database.get_pending_notifications(limit: 10000)
         
-        for batch in self.chunks(pending_notifications, 100):
-            await self.process_notification_batch(batch)
-            await asyncio.sleep(0.1)  # Rate limiting
+        FOR EACH batch IN CHUNKS(pending_notifications, 100):
+            process_notification_batch(batch)
+            WAIT 0.1 seconds  // Rate limiting
 ```
 
 ## Advanced Scenarios

@@ -56,36 +56,37 @@ Design a URL shortening service that converts long URLs into shorter, more manag
 
 ### 2. Database Design
 **Primary URL Table**:
-```sql
-CREATE TABLE urls (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    short_code VARCHAR(7) UNIQUE NOT NULL,
-    original_url TEXT NOT NULL,
-    user_id BIGINT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP,
-    click_count BIGINT DEFAULT 0,
-    INDEX idx_short_code (short_code),
-    INDEX idx_user_id (user_id),
-    INDEX idx_expires_at (expires_at)
-);
+```
+TABLE urls:
+    id: BIGINT (PRIMARY KEY, AUTO_INCREMENT)
+    short_code: STRING(7) (UNIQUE, NOT NULL)
+    original_url: TEXT (NOT NULL)
+    user_id: BIGINT (FOREIGN KEY)
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    expires_at: TIMESTAMP (NULLABLE)
+    click_count: BIGINT (DEFAULT: 0)
+    
+    INDEXES:
+        (short_code)
+        (user_id)
+        (expires_at)
 
-CREATE TABLE users (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(50) UNIQUE,
-    email VARCHAR(255) UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+TABLE users:
+    id: BIGINT (PRIMARY KEY, AUTO_INCREMENT)
+    username: STRING(50) (UNIQUE)
+    email: STRING(255) (UNIQUE)
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
 
-CREATE TABLE analytics (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    short_code VARCHAR(7),
-    ip_address VARCHAR(45),
-    user_agent TEXT,
-    country VARCHAR(2),
-    clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_short_code_time (short_code, clicked_at)
-);
+TABLE analytics:
+    id: BIGINT (PRIMARY KEY, AUTO_INCREMENT)
+    short_code: STRING(7)
+    ip_address: STRING(45)
+    user_agent: TEXT
+    country: STRING(2)
+    clicked_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    
+    INDEXES:
+        (short_code, clicked_at)
 ```
 
 ### 3. Caching Strategy
@@ -106,38 +107,35 @@ CREATE TABLE analytics (
 **Answer**: There are several approaches:
 
 **Approach 1: Counter-Based (Recommended)**
-```python
-def encode_base62(num):
+```
+FUNCTION encode_base62(num):
     chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    if num == 0:
-        return chars[0]
+    IF num == 0:
+        RETURN chars[0]
     
     result = []
-    while num > 0:
-        result.append(chars[num % 62])
-        num //= 62
+    WHILE num > 0:
+        result.ADD(chars[num % 62])
+        num = num // 62
     
-    return ''.join(reversed(result))
+    RETURN REVERSE_AND_JOIN(result)
 
-# Use auto-increment ID from database
+// Use auto-increment ID from database
 short_code = encode_base62(auto_increment_id)
 ```
 
 **Approach 2: Hash-Based**
-```python
-import hashlib
-
-def generate_short_url(original_url, salt=""):
-    hash_object = hashlib.md5((original_url + salt).encode())
-    return hash_object.hexdigest()[:7]
+```
+FUNCTION generate_short_url(original_url, salt):
+    hash_input = original_url + salt
+    hash_object = MD5_HASH(hash_input)
+    RETURN FIRST_7_CHARS(hash_object.hexdigest())
 ```
 
 **Approach 3: UUID-Based**
-```python
-import uuid
-
-def generate_uuid_based():
-    return str(uuid.uuid4())[:7]
+```
+FUNCTION generate_uuid_based():
+    RETURN FIRST_7_CHARS(GENERATE_UUID())
 ```
 
 **Trade-offs**:
@@ -161,25 +159,23 @@ Cache-Control: public, max-age=300
 - Geographic distribution reduces latency
 - Handle 80% of requests without reaching origin
 
-**3. Application Cache (Redis)**
-```python
-import redis
+**3. Application Cache**
+```
+cache_client = CacheClient()
 
-redis_client = redis.Redis(host='redis-cluster')
-
-def get_original_url(short_code):
-    # Try cache first
-    cached_url = redis_client.get(f"url:{short_code}")
-    if cached_url:
-        return cached_url.decode('utf-8')
+FUNCTION get_original_url(short_code):
+    // Try cache first
+    cached_url = cache_client.get("url:" + short_code)
+    IF cached_url EXISTS:
+        RETURN cached_url
     
-    # Fallback to database
+    // Fallback to database
     original_url = database.get_url(short_code)
-    if original_url:
-        # Cache for 24 hours
-        redis_client.setex(f"url:{short_code}", 86400, original_url)
+    IF original_url EXISTS:
+        // Cache for 24 hours
+        cache_client.set_with_expiry("url:" + short_code, 86400, original_url)
     
-    return original_url
+    RETURN original_url
 ```
 
 **4. Database Optimization**
@@ -197,28 +193,28 @@ def get_original_url(short_code):
 - Good up to ~1M URLs
 
 **Phase 2: Read Replicas**
-```python
-class DatabaseRouter:
-    def __init__(self):
-        self.master = get_master_connection()
-        self.replicas = [get_replica_connection(i) for i in range(3)]
+```
+CLASS DatabaseRouter:
+    INITIALIZE:
+        master = get_master_connection()
+        replicas = [get_replica_connection(i) FOR i IN range(3)]
     
-    def read(self, query):
-        replica = random.choice(self.replicas)
-        return replica.execute(query)
+    FUNCTION read(query):
+        replica = RANDOM_CHOICE(replicas)
+        RETURN replica.execute(query)
     
-    def write(self, query):
-        return self.master.execute(query)
+    FUNCTION write(query):
+        RETURN master.execute(query)
 ```
 
 **Phase 3: Horizontal Partitioning (Sharding)**
-```python
-def get_shard_id(short_code):
-    return hash(short_code) % NUM_SHARDS
+```
+FUNCTION get_shard_id(short_code):
+    RETURN HASH(short_code) % NUM_SHARDS
 
-def get_database_shard(short_code):
+FUNCTION get_database_shard(short_code):
     shard_id = get_shard_id(short_code)
-    return database_connections[shard_id]
+    RETURN database_connections[shard_id]
 ```
 
 **Sharding Strategies**:
@@ -231,62 +227,57 @@ def get_database_shard(short_code):
 **Answer**: Asynchronous analytics processing:
 
 **1. Event-Driven Architecture**
-```python
-import asyncio
-import json
-from kafka import KafkaProducer
-
-class AnalyticsCollector:
-    def __init__(self):
-        self.kafka_producer = KafkaProducer(
-            bootstrap_servers=['kafka1:9092', 'kafka2:9092'],
-            value_serializer=lambda v: json.dumps(v).encode('utf-8')
-        )
+```
+CLASS AnalyticsCollector:
+    INITIALIZE:
+        message_producer = MessageProducer([
+            servers: ['kafka1:9092', 'kafka2:9092']
+        ])
     
-    def log_click(self, short_code, request_data):
+    FUNCTION log_click(short_code, request_data):
         event = {
-            'short_code': short_code,
-            'ip_address': request_data.remote_addr,
-            'user_agent': request_data.headers.get('User-Agent'),
-            'timestamp': time.time(),
-            'country': self.get_country(request_data.remote_addr)
+            short_code: short_code,
+            ip_address: request_data.remote_addr,
+            user_agent: request_data.headers.get('User-Agent'),
+            timestamp: current_timestamp(),
+            country: get_country(request_data.remote_addr)
         }
         
-        # Non-blocking send
-        self.kafka_producer.send('url_clicks', value=event)
+        // Non-blocking send
+        message_producer.send('url_clicks', event)
 ```
 
 **2. Batch Processing**
-```python
-class AnalyticsProcessor:
-    def process_clicks_batch(self, events):
-        # Batch insert to reduce database load
+```
+CLASS AnalyticsProcessor:
+    FUNCTION process_clicks_batch(events):
+        // Batch insert to reduce database load
         click_records = []
-        for event in events:
-            click_records.append({
-                'short_code': event['short_code'],
-                'ip_address': event['ip_address'],
-                'country': event['country'],
-                'clicked_at': datetime.fromtimestamp(event['timestamp'])
+        FOR EACH event IN events:
+            click_records.ADD({
+                short_code: event.short_code,
+                ip_address: event.ip_address,
+                country: event.country,
+                clicked_at: convert_timestamp(event.timestamp)
             })
         
-        # Bulk insert every 1000 records or 30 seconds
+        // Bulk insert every 1000 records or 30 seconds
         database.bulk_insert('analytics', click_records)
         
-        # Update click counts in Redis
-        for record in click_records:
-            redis_client.incr(f"clicks:{record['short_code']}")
+        // Update click counts in cache
+        FOR EACH record IN click_records:
+            cache_client.increment("clicks:" + record.short_code)
 ```
 
 **3. Real-time Aggregations**
-```python
-# Use Redis for real-time counters
-def increment_click_count(short_code):
-    pipeline = redis_client.pipeline()
-    pipeline.incr(f"clicks:total:{short_code}")
-    pipeline.incr(f"clicks:daily:{short_code}:{today}")
-    pipeline.incr(f"clicks:hourly:{short_code}:{current_hour}")
-    pipeline.execute()
+```
+// Use cache for real-time counters
+FUNCTION increment_click_count(short_code):
+    batch_operations = cache_client.create_pipeline()
+    batch_operations.increment("clicks:total:" + short_code)
+    batch_operations.increment("clicks:daily:" + short_code + ":" + today)
+    batch_operations.increment("clicks:hourly:" + short_code + ":" + current_hour)
+    batch_operations.execute()
 ```
 
 ### Q5: How do you handle URL expiration and cleanup?
@@ -294,54 +285,54 @@ def increment_click_count(short_code):
 **Answer**: Multi-layered expiration strategy:
 
 **1. Application-Level Check**
-```python
-def get_url_with_expiration_check(short_code):
+```
+FUNCTION get_url_with_expiration_check(short_code):
     url_data = database.get_url(short_code)
     
-    if not url_data:
-        raise URLNotFound()
+    IF url_data IS NULL:
+        THROW URLNotFound()
     
-    if url_data.expires_at and datetime.now() > url_data.expires_at:
-        # Mark as expired but don't delete immediately
+    IF url_data.expires_at EXISTS AND current_timestamp() > url_data.expires_at:
+        // Mark as expired but don't delete immediately
         database.mark_expired(short_code)
-        raise URLExpired()
+        THROW URLExpired()
     
-    return url_data.original_url
+    RETURN url_data.original_url
 ```
 
 **2. Background Cleanup Service**
-```python
-class ExpirationCleanupService:
-    def __init__(self):
-        self.batch_size = 1000
+```
+CLASS ExpirationCleanupService:
+    INITIALIZE:
+        batch_size = 1000
         
-    def cleanup_expired_urls(self):
-        # Find expired URLs
-        expired_urls = database.query("""
+    FUNCTION cleanup_expired_urls():
+        // Find expired URLs
+        expired_urls = database.query("
             SELECT short_code FROM urls 
-            WHERE expires_at < NOW() 
+            WHERE expires_at < CURRENT_TIME() 
             AND deleted_at IS NULL 
-            LIMIT %s
-        """, self.batch_size)
+            LIMIT batch_size
+        ")
         
-        for batch in self.chunks(expired_urls, 100):
-            # Soft delete - mark as deleted but keep for analytics
+        FOR EACH batch IN CHUNKS(expired_urls, 100):
+            // Soft delete - mark as deleted but keep for analytics
             database.soft_delete_batch(batch)
             
-            # Remove from cache
-            cache_keys = [f"url:{code}" for code in batch]
-            redis_client.delete(*cache_keys)
+            // Remove from cache
+            cache_keys = ["url:" + code FOR code IN batch]
+            cache_client.delete_multiple(cache_keys)
 ```
 
 **3. Database-Level TTL (for some databases)**
-```sql
--- For databases that support TTL
-CREATE TABLE temp_urls (
-    short_code VARCHAR(7) PRIMARY KEY,
-    original_url TEXT,
-    expires_at TIMESTAMP,
-    TTL expires_at
-);
+```
+// For databases that support TTL
+TABLE temp_urls:
+    short_code: STRING(7) (PRIMARY KEY)
+    original_url: TEXT
+    expires_at: TIMESTAMP
+    
+    TTL_COLUMN: expires_at
 ```
 
 ### Q6: How do you prevent abuse and implement security measures?

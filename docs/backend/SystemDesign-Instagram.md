@@ -59,188 +59,187 @@ Design a photo-sharing social media platform that allows users to upload, share,
 ## Core Components
 
 ### 1. Photo Service
-```python
-class PhotoService:
-    def __init__(self):
-        self.s3_client = S3Client()
-        self.image_processor = ImageProcessor()
-        self.cdn = CDNManager()
+```
+CLASS PhotoService:
+    INITIALIZE:
+        cloud_storage_client = CloudStorageClient()
+        image_processor = ImageProcessor()
+        cdn_manager = CDNManager()
         
-    async def upload_photo(self, user_id, photo_data, caption, location=None):
-        # Generate unique photo ID
-        photo_id = str(uuid.uuid4())
+    FUNCTION upload_photo(user_id, photo_data, caption, location):
+        // Generate unique photo ID
+        photo_id = generate_unique_id()
         
-        # Process image in different sizes
-        processed_images = await self.image_processor.process_image(
+        // Process image in different sizes
+        processed_images = image_processor.process_image(
             photo_data, 
-            sizes=['thumbnail', 'medium', 'large', 'original']
+            sizes: ['thumbnail', 'medium', 'large', 'original']
         )
         
-        # Upload to distributed storage
+        // Upload to distributed storage
         upload_tasks = []
-        for size, image_data in processed_images.items():
-            s3_key = f"photos/{user_id}/{photo_id}_{size}.jpg"
-            task = self.s3_client.upload(
-                bucket='instagram-photos',
-                key=s3_key,
-                data=image_data
-            )
-            upload_tasks.append(task)
+        FOR EACH (size, image_data) IN processed_images:
+            storage_key = "photos/" + user_id + "/" + photo_id + "_" + size + ".jpg"
+            task = cloud_storage_client.upload({
+                bucket: 'instagram-photos',
+                key: storage_key,
+                data: image_data
+            })
+            upload_tasks.ADD(task)
         
-        await asyncio.gather(*upload_tasks)
+        EXECUTE_ALL_PARALLEL(upload_tasks)
         
-        # Save metadata to database
+        // Save metadata to database
         photo_metadata = {
-            'id': photo_id,
-            'user_id': user_id,
-            'caption': caption,
-            'location': location,
-            'created_at': datetime.now(),
-            'like_count': 0,
-            'comment_count': 0,
-            'urls': {
-                size: f"{self.cdn.base_url}/photos/{user_id}/{photo_id}_{size}.jpg"
-                for size in processed_images.keys()
-            }
+            id: photo_id,
+            user_id: user_id,
+            caption: caption,
+            location: location,
+            created_at: current_timestamp(),
+            like_count: 0,
+            comment_count: 0,
+            urls: GENERATE_URLS_FOR_ALL_SIZES(user_id, photo_id, processed_images.keys())
         }
         
-        await self.db.save_photo_metadata(photo_metadata)
+        database.save_photo_metadata(photo_metadata)
         
-        # Trigger feed generation for followers
-        await self.feed_service.add_photo_to_followers_feed(user_id, photo_id)
+        // Trigger feed generation for followers
+        feed_service.add_photo_to_followers_feed(user_id, photo_id)
         
-        return photo_metadata
+        RETURN photo_metadata
 ```
 
 ### 2. Feed Service
-```python
-class FeedService:
-    def __init__(self):
-        self.cache = RedisClient()
-        self.db = DatabaseClient()
+```
+CLASS FeedService:
+    INITIALIZE:
+        cache = CacheClient()
+        database = DatabaseClient()
         
-    async def generate_user_feed(self, user_id, limit=20, cursor=None):
-        # Try cache first
-        cache_key = f"feed:{user_id}"
-        cached_feed = await self.cache.get(cache_key)
+    FUNCTION generate_user_feed(user_id, limit, cursor):
+        // Try cache first
+        cache_key = "feed:" + user_id
+        cached_feed = cache.get(cache_key)
         
-        if cached_feed and not cursor:
-            return json.loads(cached_feed)
+        IF cached_feed EXISTS AND cursor IS NULL:
+            RETURN parse_json(cached_feed)
         
-        # Generate feed from database
-        following_users = await self.db.get_following_users(user_id)
+        // Generate feed from database
+        following_users = database.get_following_users(user_id)
         
-        # Get recent photos from followed users
-        feed_photos = await self.db.query("""
+        // Get recent photos from followed users
+        feed_photos = database.query("
             SELECT p.*, u.username, u.profile_pic_url
             FROM photos p
             JOIN users u ON p.user_id = u.id
-            WHERE p.user_id IN ({})
-            AND p.created_at > NOW() - INTERVAL 7 DAY
+            WHERE p.user_id IN (following_users)
+            AND p.created_at > CURRENT_TIME - 7 DAYS
             ORDER BY p.created_at DESC, p.like_count DESC
-            LIMIT %s
-        """.format(','.join(['%s'] * len(following_users))), 
-        following_users + [limit])
+            LIMIT limit
+        ")
         
-        # Enrich with user interactions
-        for photo in feed_photos:
-            photo['user_liked'] = await self.db.has_user_liked(user_id, photo['id'])
-            photo['recent_likes'] = await self.db.get_recent_likes(photo['id'], 3)
+        // Enrich with user interactions
+        FOR EACH photo IN feed_photos:
+            photo.user_liked = database.has_user_liked(user_id, photo.id)
+            photo.recent_likes = database.get_recent_likes(photo.id, 3)
         
-        # Cache feed for 15 minutes
-        await self.cache.setex(cache_key, 900, json.dumps(feed_photos))
+        // Cache feed for 15 minutes
+        cache.set_with_expiry(cache_key, 900, to_json(feed_photos))
         
-        return feed_photos
+        RETURN feed_photos
     
-    async def add_photo_to_followers_feed(self, user_id, photo_id):
-        # Get all followers
-        followers = await self.db.get_followers(user_id)
+    FUNCTION add_photo_to_followers_feed(user_id, photo_id):
+        // Get all followers
+        followers = database.get_followers(user_id)
         
-        # Add to each follower's feed asynchronously
+        // Add to each follower's feed asynchronously
         tasks = []
-        for follower_id in followers:
-            task = self.add_to_user_feed(follower_id, photo_id)
-            tasks.append(task)
+        FOR EACH follower_id IN followers:
+            task = add_to_user_feed(follower_id, photo_id)
+            tasks.ADD(task)
         
-        await asyncio.gather(*tasks, return_exceptions=True)
+        EXECUTE_ALL_PARALLEL(tasks)
 ```
 
 ### 3. Database Schema
-```sql
--- Users table
-CREATE TABLE users (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    full_name VARCHAR(100),
-    bio TEXT,
-    profile_pic_url TEXT,
-    follower_count INT DEFAULT 0,
-    following_count INT DEFAULT 0,
-    post_count INT DEFAULT 0,
-    is_verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_username (username)
-);
+```
+// Users table
+TABLE users:
+    id: BIGINT (PRIMARY KEY, AUTO_INCREMENT)
+    username: STRING(50) (UNIQUE, NOT NULL)
+    email: STRING(255) (UNIQUE, NOT NULL)
+    full_name: STRING(100)
+    bio: TEXT
+    profile_pic_url: TEXT
+    follower_count: INTEGER (DEFAULT: 0)
+    following_count: INTEGER (DEFAULT: 0)
+    post_count: INTEGER (DEFAULT: 0)
+    is_verified: BOOLEAN (DEFAULT: false)
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    
+    INDEXES:
+        (username)
 
--- Photos table (partitioned by user_id)
-CREATE TABLE photos (
-    id VARCHAR(36) PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    caption TEXT,
-    location VARCHAR(100),
-    original_url TEXT NOT NULL,
-    thumbnail_url TEXT NOT NULL,
-    medium_url TEXT NOT NULL,
-    large_url TEXT NOT NULL,
-    like_count INT DEFAULT 0,
-    comment_count INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user_created (user_id, created_at DESC),
-    INDEX idx_created_likes (created_at DESC, like_count DESC),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) PARTITION BY HASH(user_id) PARTITIONS 100;
+// Photos table (partitioned by user_id)
+TABLE photos:
+    id: STRING(36) (PRIMARY KEY)
+    user_id: BIGINT (FOREIGN KEY)
+    caption: TEXT
+    location: STRING(100)
+    original_url: TEXT (NOT NULL)
+    thumbnail_url: TEXT (NOT NULL)
+    medium_url: TEXT (NOT NULL)
+    large_url: TEXT (NOT NULL)
+    like_count: INTEGER (DEFAULT: 0)
+    comment_count: INTEGER (DEFAULT: 0)
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    updated_at: TIMESTAMP (DEFAULT: CURRENT_TIME, ON UPDATE: CURRENT_TIME)
+    
+    INDEXES:
+        (user_id, created_at DESC)
+        (created_at DESC, like_count DESC)
+    
+    PARTITIONING: HASH(user_id) INTO 100 PARTITIONS
 
--- Follows relationship table
-CREATE TABLE follows (
-    follower_id BIGINT,
-    following_id BIGINT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (follower_id, following_id),
-    FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_following (following_id)
-);
+// Follows relationship table
+TABLE follows:
+    follower_id: BIGINT (FOREIGN KEY)
+    following_id: BIGINT (FOREIGN KEY)
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    
+    PRIMARY KEY: (follower_id, following_id)
+    
+    INDEXES:
+        (following_id)
 
--- Likes table (partitioned by photo_id)
-CREATE TABLE likes (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    photo_id VARCHAR(36) NOT NULL,
-    user_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_user_photo (user_id, photo_id),
-    INDEX idx_photo_created (photo_id, created_at DESC),
-    INDEX idx_user_created (user_id, created_at DESC),
-    FOREIGN KEY (photo_id) REFERENCES photos(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) PARTITION BY HASH(photo_id) PARTITIONS 100;
+// Likes table (partitioned by photo_id)
+TABLE likes:
+    id: BIGINT (PRIMARY KEY, AUTO_INCREMENT)
+    photo_id: STRING(36) (FOREIGN KEY)
+    user_id: BIGINT (FOREIGN KEY)
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    
+    UNIQUE CONSTRAINT: (user_id, photo_id)
+    
+    INDEXES:
+        (photo_id, created_at DESC)
+        (user_id, created_at DESC)
+    
+    PARTITIONING: HASH(photo_id) INTO 100 PARTITIONS
 
--- Comments table
-CREATE TABLE comments (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    photo_id VARCHAR(36) NOT NULL,
-    user_id BIGINT NOT NULL,
-    content TEXT NOT NULL,
-    reply_to BIGINT NULL,  -- For nested comments
-    like_count INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_photo_created (photo_id, created_at),
-    INDEX idx_user_created (user_id, created_at DESC),
-    FOREIGN KEY (photo_id) REFERENCES photos(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (reply_to) REFERENCES comments(id) ON DELETE CASCADE
-);
+// Comments table
+TABLE comments:
+    id: BIGINT (PRIMARY KEY, AUTO_INCREMENT)
+    photo_id: STRING(36) (FOREIGN KEY)
+    user_id: BIGINT (FOREIGN KEY)
+    content: TEXT (NOT NULL)
+    reply_to: BIGINT (FOREIGN KEY, NULLABLE)  // For nested comments
+    like_count: INTEGER (DEFAULT: 0)
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    
+    INDEXES:
+        (photo_id, created_at)
+        (user_id, created_at DESC)
 ```
 
 ## Detailed Questions & Answers
@@ -250,129 +249,121 @@ CREATE TABLE comments (
 **Answer**: Multi-tier storage strategy with CDN distribution:
 
 **1. Image Processing Pipeline**
-```python
-class ImageProcessor:
-    def __init__(self):
-        self.sizes = {
+```
+CLASS ImageProcessor:
+    INITIALIZE:
+        sizes = {
             'thumbnail': (150, 150),
             'medium': (640, 640),
             'large': (1080, 1080),
-            'original': None  # Keep original size
+            'original': NULL  // Keep original size
         }
     
-    async def process_image(self, image_data, sizes):
-        from PIL import Image
-        import io
+    FUNCTION process_image(image_data, size_list):
+        // Load original image
+        original_image = LOAD_IMAGE(image_data)
         
-        # Load original image
-        original = Image.open(io.BytesIO(image_data))
+        // Convert to RGB if necessary
+        IF original_image.mode IN ['RGBA', 'LA', 'P']:
+            original_image = CONVERT_TO_RGB(original_image)
         
-        # Convert to RGB if necessary
-        if original.mode in ('RGBA', 'LA', 'P'):
-            original = original.convert('RGB')
+        processed_images = MAP()
         
-        processed_images = {}
+        FOR EACH size_name IN size_list:
+            IF size_name == 'original':
+                // Compress original but keep size
+                processed_images[size_name] = compress_image(original_image, quality: 85)
+            ELSE:
+                // Resize and compress
+                target_size = sizes[size_name]
+                resized_image = smart_resize(original_image, target_size)
+                processed_images[size_name] = compress_image(resized_image, quality: 80)
         
-        for size_name in sizes:
-            if size_name == 'original':
-                # Compress original but keep size
-                processed_images[size_name] = self.compress_image(original, quality=85)
-            else:
-                # Resize and compress
-                target_size = self.sizes[size_name]
-                resized = self.smart_resize(original, target_size)
-                processed_images[size_name] = self.compress_image(resized, quality=80)
-        
-        return processed_images
+        RETURN processed_images
     
-    def smart_resize(self, image, target_size):
-        # Maintain aspect ratio while fitting in target size
-        image.thumbnail(target_size, Image.Resampling.LANCZOS)
-        return image
+    FUNCTION smart_resize(image, target_size):
+        // Maintain aspect ratio while fitting in target size
+        RESIZE_WITH_ASPECT_RATIO(image, target_size, algorithm: LANCZOS)
+        RETURN image
     
-    def compress_image(self, image, quality=80):
-        output = io.BytesIO()
-        image.save(output, format='JPEG', quality=quality, optimize=True)
-        return output.getvalue()
+    FUNCTION compress_image(image, quality):
+        RETURN COMPRESS_TO_JPEG(image, quality: quality, optimize: true)
 ```
 
 **2. Distributed Storage Strategy**
-```python
-class PhotoStorageService:
-    def __init__(self):
-        self.primary_storage = S3Client(region='us-east-1')
-        self.replica_storage = S3Client(region='eu-west-1')
-        self.cdn = CloudFrontDistribution()
+```
+CLASS PhotoStorageService:
+    INITIALIZE:
+        primary_storage = CloudStorageClient(region: 'us-east-1')
+        replica_storage = CloudStorageClient(region: 'eu-west-1')
+        cdn = CDNDistribution()
     
-    async def store_photo(self, user_id, photo_id, image_variants):
+    FUNCTION store_photo(user_id, photo_id, image_variants):
         storage_tasks = []
         
-        for size, image_data in image_variants.items():
-            # Store in multiple regions for redundancy
-            s3_key = f"photos/{user_id[:2]}/{user_id}/{photo_id}_{size}.jpg"
+        FOR EACH (size, image_data) IN image_variants:
+            // Store in multiple regions for redundancy
+            storage_key = "photos/" + FIRST_2_CHARS(user_id) + "/" + user_id + "/" + photo_id + "_" + size + ".jpg"
             
-            # Primary storage
-            primary_task = self.primary_storage.put_object(
-                bucket='instagram-primary',
-                key=s3_key,
-                body=image_data,
-                content_type='image/jpeg',
-                cache_control='public, max-age=31536000'  # 1 year
-            )
+            // Primary storage
+            primary_task = primary_storage.put_object({
+                bucket: 'instagram-primary',
+                key: storage_key,
+                data: image_data,
+                content_type: 'image/jpeg',
+                cache_control: 'public, max-age=31536000'  // 1 year
+            })
             
-            # Replica storage
-            replica_task = self.replica_storage.put_object(
-                bucket='instagram-replica',
-                key=s3_key,
-                body=image_data,
-                content_type='image/jpeg'
-            )
+            // Replica storage
+            replica_task = replica_storage.put_object({
+                bucket: 'instagram-replica',
+                key: storage_key,
+                data: image_data,
+                content_type: 'image/jpeg'
+            })
             
-            storage_tasks.extend([primary_task, replica_task])
+            storage_tasks.ADD(primary_task)
+            storage_tasks.ADD(replica_task)
         
-        await asyncio.gather(*storage_tasks)
+        EXECUTE_ALL_PARALLEL(storage_tasks)
         
-        # Invalidate CDN cache for immediate availability
-        await self.cdn.invalidate_cache([
-            f"/photos/{user_id}/{photo_id}_*.jpg"
+        // Invalidate CDN cache for immediate availability
+        cdn.invalidate_cache([
+            "/photos/" + user_id + "/" + photo_id + "_*.jpg"
         ])
 ```
 
 **3. Progressive Upload for Better UX**
-```javascript
-class ProgressiveUploader {
-    async uploadPhoto(file, onProgress) {
+```
+CLASS ProgressiveUploader:
+    FUNCTION upload_photo(file, progress_callback):
         // Upload thumbnail first for immediate preview
-        const thumbnail = await this.generateThumbnail(file);
-        const thumbnailResult = await this.uploadChunk(thumbnail, 'thumbnail', onProgress);
+        thumbnail = generate_thumbnail(file)
+        thumbnail_result = upload_chunk(thumbnail, 'thumbnail', progress_callback)
         
         // Show thumbnail immediately
-        this.displayThumbnail(thumbnailResult.url);
+        display_thumbnail(thumbnail_result.url)
         
         // Upload full image in background
-        const fullImage = await this.compressImage(file);
-        const fullResult = await this.uploadChunk(fullImage, 'full', onProgress);
+        full_image = compress_image(file)
+        full_result = upload_chunk(full_image, 'full', progress_callback)
         
-        return {
-            thumbnail: thumbnailResult.url,
-            full: fullResult.url
-        };
-    }
-    
-    async uploadChunk(data, type, onProgress) {
-        const chunkSize = 1024 * 1024; // 1MB chunks
-        const totalChunks = Math.ceil(data.size / chunkSize);
-        
-        for (let i = 0; i < totalChunks; i++) {
-            const start = i * chunkSize;
-            const end = Math.min(start + chunkSize, data.size);
-            const chunk = data.slice(start, end);
-            
-            await this.uploadSingleChunk(chunk, i, totalChunks, type);
-            onProgress((i + 1) / totalChunks * 100);
+        RETURN {
+            thumbnail: thumbnail_result.url,
+            full: full_result.url
         }
-    }
-}
+    
+    FUNCTION upload_chunk(data, type, progress_callback):
+        chunk_size = 1MB  // 1MB chunks
+        total_chunks = CEIL(data.size / chunk_size)
+        
+        FOR i = 0 TO total_chunks - 1:
+            start = i * chunk_size
+            end = MIN(start + chunk_size, data.size)
+            chunk = data.slice(start, end)
+            
+            upload_single_chunk(chunk, i, total_chunks, type)
+            progress_callback((i + 1) / total_chunks * 100)
 ```
 
 ### Q2: How do you generate and cache user feeds efficiently?
@@ -380,150 +371,150 @@ class ProgressiveUploader {
 **Answer**: Multi-layer feed generation with push/pull hybrid model:
 
 **1. Feed Generation Strategies**
-```python
-class FeedGenerationService:
-    def __init__(self):
-        self.cache = RedisCluster()
-        self.db = DatabaseClient()
+```
+CLASS FeedGenerationService:
+    INITIALIZE:
+        cache = CacheCluster()
+        database = DatabaseClient()
         
-    async def get_user_feed(self, user_id, strategy='hybrid'):
-        if strategy == 'pull':
-            return await self.pull_model_feed(user_id)
-        elif strategy == 'push':
-            return await self.push_model_feed(user_id)
-        else:
-            return await self.hybrid_model_feed(user_id)
+    FUNCTION get_user_feed(user_id, strategy):
+        IF strategy == 'pull':
+            RETURN pull_model_feed(user_id)
+        ELSE IF strategy == 'push':
+            RETURN push_model_feed(user_id)
+        ELSE:
+            RETURN hybrid_model_feed(user_id)
     
-    async def hybrid_model_feed(self, user_id):
-        # For users with < 1000 followers: push model
-        # For celebrities with > 1000 followers: pull model
+    FUNCTION hybrid_model_feed(user_id):
+        // For users with < 1000 followers: push model
+        // For celebrities with > 1000 followers: pull model
         
-        follower_count = await self.db.get_follower_count(user_id)
+        follower_count = database.get_follower_count(user_id)
         
-        if follower_count < 1000:
-            return await self.push_model_feed(user_id)
-        else:
-            return await self.pull_model_feed(user_id)
+        IF follower_count < 1000:
+            RETURN push_model_feed(user_id)
+        ELSE:
+            RETURN pull_model_feed(user_id)
     
-    async def push_model_feed(self, user_id):
-        # Pre-computed feed stored in cache
-        feed_key = f"feed:push:{user_id}"
-        cached_feed = await self.cache.lrange(feed_key, 0, 19)  # Top 20
+    FUNCTION push_model_feed(user_id):
+        // Pre-computed feed stored in cache
+        feed_key = "feed:push:" + user_id
+        cached_feed = cache.get_range(feed_key, 0, 19)  // Top 20
         
-        if cached_feed:
-            # Enrich with real-time data
-            return await self.enrich_feed_items(cached_feed)
+        IF cached_feed EXISTS:
+            // Enrich with real-time data
+            RETURN enrich_feed_items(cached_feed)
         
-        # Fallback to pull model if cache miss
-        return await self.pull_model_feed(user_id)
+        // Fallback to pull model if cache miss
+        RETURN pull_model_feed(user_id)
     
-    async def pull_model_feed(self, user_id):
-        # Generate feed on-demand
-        following = await self.db.get_following_users(user_id)
+    FUNCTION pull_model_feed(user_id):
+        // Generate feed on-demand
+        following = database.get_following_users(user_id)
         
-        if not following:
-            return await self.get_discover_feed(user_id)
+        IF following IS EMPTY:
+            RETURN get_discover_feed(user_id)
         
-        # Merge timeline from multiple users (merge k sorted lists)
-        feed_posts = await self.merge_user_timelines(following, limit=20)
+        // Merge timeline from multiple users (merge k sorted lists)
+        feed_posts = merge_user_timelines(following, limit: 20)
         
-        # Cache for 10 minutes
-        cache_key = f"feed:pull:{user_id}"
-        await self.cache.setex(cache_key, 600, json.dumps(feed_posts))
+        // Cache for 10 minutes
+        cache_key = "feed:pull:" + user_id
+        cache.set_with_expiry(cache_key, 600, to_json(feed_posts))
         
-        return feed_posts
+        RETURN feed_posts
 ```
 
 **2. Real-time Feed Updates**
-```python
-class FeedUpdateService:
-    async def on_new_post(self, user_id, post_id):
-        # Get user's followers
-        followers = await self.db.get_active_followers(user_id, limit=10000)
+```
+CLASS FeedUpdateService:
+    FUNCTION on_new_post(user_id, post_id):
+        // Get user's followers
+        followers = database.get_active_followers(user_id, limit: 10000)
         
-        post_data = await self.db.get_post_data(post_id)
+        post_data = database.get_post_data(post_id)
         
-        # Update feeds in batches to avoid overwhelming Redis
+        // Update feeds in batches to avoid overwhelming cache
         batch_size = 1000
-        for i in range(0, len(followers), batch_size):
-            batch = followers[i:i + batch_size]
-            await self.update_followers_feeds(batch, post_data)
-            await asyncio.sleep(0.1)  # Prevent Redis overload
+        FOR i = 0 TO LENGTH(followers) STEP batch_size:
+            batch = followers[i : i + batch_size]
+            update_followers_feeds(batch, post_data)
+            WAIT 0.1 seconds  // Prevent cache overload
     
-    async def update_followers_feeds(self, followers, post_data):
-        pipeline = self.cache.pipeline()
+    FUNCTION update_followers_feeds(followers, post_data):
+        batch_operations = CREATE_BATCH_PIPELINE()
         
-        for follower_id in followers:
-            feed_key = f"feed:push:{follower_id}"
+        FOR EACH follower_id IN followers:
+            feed_key = "feed:push:" + follower_id
             
-            # Add to beginning of feed
-            pipeline.lpush(feed_key, json.dumps(post_data))
+            // Add to beginning of feed
+            batch_operations.ADD_TO_LIST_FRONT(feed_key, to_json(post_data))
             
-            # Keep only latest 1000 posts
-            pipeline.ltrim(feed_key, 0, 999)
+            // Keep only latest 1000 posts
+            batch_operations.TRIM_LIST(feed_key, 0, 999)
             
-            # Set expiration (7 days)
-            pipeline.expire(feed_key, 604800)
+            // Set expiration (7 days)
+            batch_operations.SET_EXPIRY(feed_key, 604800)
         
-        await pipeline.execute()
+        EXECUTE_BATCH(batch_operations)
 ```
 
 **3. Feed Ranking Algorithm**
-```python
-class FeedRankingService:
-    def __init__(self):
-        self.ml_model = MachineLearningModel()
+```
+CLASS FeedRankingService:
+    INITIALIZE:
+        ml_model = MachineLearningModel()
     
-    async def rank_feed_posts(self, user_id, posts):
-        # Calculate engagement score for each post
+    FUNCTION rank_feed_posts(user_id, posts):
+        // Calculate engagement score for each post
         scored_posts = []
         
-        for post in posts:
-            score = await self.calculate_engagement_score(user_id, post)
-            scored_posts.append({
-                'post': post,
-                'score': score
+        FOR EACH post IN posts:
+            score = calculate_engagement_score(user_id, post)
+            scored_posts.ADD({
+                post: post,
+                score: score
             })
         
-        # Sort by score (highest first)
-        scored_posts.sort(key=lambda x: x['score'], reverse=True)
+        // Sort by score (highest first)
+        SORT scored_posts BY score DESCENDING
         
-        return [item['post'] for item in scored_posts]
+        RETURN EXTRACT_POSTS(scored_posts)
     
-    async def calculate_engagement_score(self, user_id, post):
-        # Time decay factor (newer posts get higher score)
-        time_diff = (datetime.now() - post['created_at']).total_seconds()
-        time_factor = max(0, 1 - time_diff / (24 * 3600))  # Decay over 24 hours
+    FUNCTION calculate_engagement_score(user_id, post):
+        // Time decay factor (newer posts get higher score)
+        time_diff = SECONDS_BETWEEN(current_time(), post.created_at)
+        time_factor = MAX(0, 1 - time_diff / (24 * 3600))  // Decay over 24 hours
         
-        # Engagement metrics
-        like_rate = post['like_count'] / max(1, time_diff / 3600)  # Likes per hour
-        comment_rate = post['comment_count'] / max(1, time_diff / 3600)
+        // Engagement metrics
+        like_rate = post.like_count / MAX(1, time_diff / 3600)  // Likes per hour
+        comment_rate = post.comment_count / MAX(1, time_diff / 3600)
         
-        # User affinity (how much user interacts with this poster)
-        affinity_score = await self.get_user_affinity(user_id, post['user_id'])
+        // User affinity (how much user interacts with this poster)
+        affinity_score = get_user_affinity(user_id, post.user_id)
         
-        # Combine factors
+        // Combine factors
         base_score = (like_rate * 0.3 + comment_rate * 0.5 + affinity_score * 0.2)
         final_score = base_score * time_factor
         
-        return final_score
+        RETURN final_score
     
-    async def get_user_affinity(self, user_id, poster_id):
-        # Calculate based on past interactions
-        interactions = await self.db.query("""
+    FUNCTION get_user_affinity(user_id, poster_id):
+        // Calculate based on past interactions
+        interactions = database.query("
             SELECT COUNT(*) as interaction_count
             FROM (
-                SELECT 1 FROM likes WHERE user_id = %s AND photo_id IN (
-                    SELECT id FROM photos WHERE user_id = %s
+                SELECT 1 FROM likes WHERE user_id = user_id AND photo_id IN (
+                    SELECT id FROM photos WHERE user_id = poster_id
                 )
                 UNION ALL
-                SELECT 1 FROM comments WHERE user_id = %s AND photo_id IN (
-                    SELECT id FROM photos WHERE user_id = %s
+                SELECT 1 FROM comments WHERE user_id = user_id AND photo_id IN (
+                    SELECT id FROM photos WHERE user_id = poster_id
                 )
             ) as interactions
-        """, [user_id, poster_id, user_id, poster_id])
+        ")
         
-        return min(1.0, interactions['interaction_count'] / 10.0)  # Cap at 1.0
+        RETURN MIN(1.0, interactions.interaction_count / 10.0)  // Cap at 1.0
 ```
 
 ### Q3: How do you handle the hot user problem (celebrities with millions of followers)?
@@ -531,71 +522,77 @@ class FeedRankingService:
 **Answer**: Specialized handling for high-fanout users:
 
 **1. Celebrity User Detection and Handling**
-```python
-class CelebrityUserService:
-    def __init__(self):
-        self.celebrity_threshold = 100000  # 100K followers
-        self.cache = RedisCluster()
+```
+CLASS CelebrityUserService:
+    INITIALIZE:
+        celebrity_threshold = 100000  // 100K followers
+        cache = CacheCluster()
         
-    async def is_celebrity_user(self, user_id):
-        # Cache celebrity status
-        cache_key = f"celebrity:{user_id}"
-        is_celebrity = await self.cache.get(cache_key)
+    FUNCTION is_celebrity_user(user_id):
+        // Cache celebrity status
+        cache_key = "celebrity:" + user_id
+        is_celebrity = cache.get(cache_key)
         
-        if is_celebrity is None:
-            follower_count = await self.db.get_follower_count(user_id)
-            is_celebrity = follower_count >= self.celebrity_threshold
-            await self.cache.setex(cache_key, 3600, str(is_celebrity))  # Cache 1 hour
+        IF is_celebrity IS NULL:
+            follower_count = database.get_follower_count(user_id)
+            is_celebrity = follower_count >= celebrity_threshold
+            cache.set_with_expiry(cache_key, 3600, CONVERT_TO_STRING(is_celebrity))  // Cache 1 hour
         
-        return is_celebrity == 'True'
+        RETURN is_celebrity == 'True'
     
-    async def handle_celebrity_post(self, user_id, post_id):
-        # Don't push to all followers immediately
-        # Instead, use pull model with aggressive caching
+    FUNCTION handle_celebrity_post(user_id, post_id):
+        // Don't push to all followers immediately
+        // Instead, use pull model with aggressive caching
         
-        post_data = await self.db.get_post_data(post_id)
+        post_data = database.get_post_data(post_id)
         
-        # Cache the post globally for fast access
-        global_cache_key = f"celebrity_post:{post_id}"
-        await self.cache.setex(global_cache_key, 1800, json.dumps(post_data))  # 30 min
+        // Cache the post globally for fast access
+        global_cache_key = "celebrity_post:" + post_id
+        cache.set_with_expiry(global_cache_key, 1800, to_json(post_data))  // 30 min
         
-        # Update celebrity's own timeline cache
-        celebrity_timeline_key = f"user_timeline:{user_id}"
-        await self.cache.lpush(celebrity_timeline_key, post_id)
-        await self.cache.ltrim(celebrity_timeline_key, 0, 99)  # Keep 100 latest
+        // Update celebrity's own timeline cache
+        celebrity_timeline_key = "user_timeline:" + user_id
+        cache.add_to_list_front(celebrity_timeline_key, post_id)
+        cache.trim_list(celebrity_timeline_key, 0, 99)  // Keep 100 latest
         
-        # Queue for gradual follower notification
-        await self.queue_follower_notifications(user_id, post_id)
+        // Queue for gradual follower notification
+        queue_follower_notifications(user_id, post_id)
 ```
 
 **2. Gradual Fanout Strategy**
-```python
-class GradualFanoutService:
-    async def queue_follower_notifications(self, celebrity_id, post_id):
-        # Get followers in chunks
-        total_followers = await self.db.get_follower_count(celebrity_id)
+```
+CLASS GradualFanoutService:
+    FUNCTION queue_follower_notifications(celebrity_id, post_id):
+        // Get followers in chunks
+        total_followers = database.get_follower_count(celebrity_id)
         chunk_size = 10000
         
-        for offset in range(0, total_followers, chunk_size):
-            # Queue each chunk for background processing
+        FOR offset = 0 TO total_followers STEP chunk_size:
+            // Queue each chunk for background processing
             fanout_job = {
-                'celebrity_id': celebrity_id,
-                'post_id': post_id,
-                'offset': offset,
-                'limit': chunk_size,
-                'priority': 'low'  # Background processing
+                celebrity_id: celebrity_id,
+                post_id: post_id,
+                offset: offset,
+                limit: chunk_size,
+                priority: 'low'  // Background processing
             }
             
-            await self.job_queue.enqueue('celebrity_fanout', fanout_job)
+            job_queue.enqueue('celebrity_fanout', fanout_job)
     
-    async def process_celebrity_fanout(self, job):
-        followers = await self.db.get_followers_chunk(
-            job['celebrity_id'], 
-            job['offset'], 
-            job['limit']
+    FUNCTION process_celebrity_fanout(job):
+        followers = database.get_followers_chunk(
+            job.celebrity_id, 
+            job.offset, 
+            job.limit
         )
         
-        # Update feeds in smaller batches
+        // Update feeds in smaller batches
+        batch_size = 1000
+        FOR i = 0 TO LENGTH(followers) STEP batch_size:
+            batch = followers[i : i + batch_size]
+            update_follower_feeds_batch(batch, job.post_id)
+            WAIT 0.5 seconds  // Rate limiting
+```
         batch_size = 1000
         for i in range(0, len(followers), batch_size):
             batch = followers[i:i + batch_size]

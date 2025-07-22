@@ -57,404 +57,398 @@ Design a ride-sharing platform that efficiently matches riders with drivers, han
 ## Core Components
 
 ### 1. Location Service
-```python
-import redis
-import geohash2
-
-class LocationService:
-    def __init__(self):
-        self.redis_client = redis.Redis(host='redis-cluster')
-        self.location_ttl = 300  # 5 minutes
+```
+CLASS LocationService:
+    INITIALIZE:
+        cache_client = CacheClient()
+        location_ttl = 300  // 5 minutes
         
-    async def update_driver_location(self, driver_id, latitude, longitude, heading=None):
+    FUNCTION update_driver_location(driver_id, latitude, longitude, heading):
         location_data = {
-            'driver_id': driver_id,
-            'lat': latitude,
-            'lng': longitude,
-            'heading': heading,
-            'timestamp': time.time(),
-            'status': await self.get_driver_status(driver_id)
+            driver_id: driver_id,
+            lat: latitude,
+            lng: longitude,
+            heading: heading,
+            timestamp: current_timestamp(),
+            status: get_driver_status(driver_id)
         }
         
-        # Store in Redis with geospatial indexing
-        redis_key = f"driver_locations:{driver_id}"
-        await self.redis_client.setex(
-            redis_key, 
-            self.location_ttl, 
-            json.dumps(location_data)
+        // Store in cache with geospatial indexing
+        cache_key = "driver_locations:" + driver_id
+        cache_client.set_with_expiry(
+            cache_key, 
+            location_ttl, 
+            to_json(location_data)
         )
         
-        # Add to geospatial index for nearby driver queries
-        await self.redis_client.geoadd(
+        // Add to geospatial index for nearby driver queries
+        cache_client.geo_add(
             'active_drivers',
             longitude, latitude, driver_id
         )
         
-        # Update in quadtree for efficient spatial queries
-        await self.quadtree_service.update_location(driver_id, latitude, longitude)
+        // Update in spatial index for efficient spatial queries
+        spatial_index_service.update_location(driver_id, latitude, longitude)
         
-        return location_data
+        RETURN location_data
     
-    async def find_nearby_drivers(self, latitude, longitude, radius_km=5, limit=20):
-        # Use Redis GEORADIUS for fast nearby driver lookup
-        nearby_drivers = await self.redis_client.georadius(
+    FUNCTION find_nearby_drivers(latitude, longitude, radius_km, limit):
+        // Use geospatial query for fast nearby driver lookup
+        nearby_drivers = cache_client.geo_radius(
             'active_drivers',
             longitude, latitude,
-            radius_km, unit='km',
-            withdist=True,
-            withcoord=True,
-            sort='ASC',
-            count=limit
+            radius_km, unit: 'km',
+            with_distance: true,
+            with_coordinates: true,
+            sort: 'ASC',
+            count: limit
         )
         
-        # Enrich with driver details
+        // Enrich with driver details
         driver_details = []
-        for driver_data in nearby_drivers:
-            driver_id = driver_data[0]
-            distance = driver_data[1]
-            coordinates = driver_data[2]
+        FOR EACH driver_data IN nearby_drivers:
+            driver_id = driver_data.id
+            distance = driver_data.distance
+            coordinates = driver_data.coordinates
             
-            # Get additional driver info
-            driver_info = await self.get_driver_details(driver_id)
-            driver_info.update({
-                'distance_km': distance,
-                'current_lat': coordinates[1],
-                'current_lng': coordinates[0]
+            // Get additional driver info
+            driver_info = get_driver_details(driver_id)
+            driver_info.UPDATE({
+                distance_km: distance,
+                current_lat: coordinates.lat,
+                current_lng: coordinates.lng
             })
             
-            driver_details.append(driver_info)
+            driver_details.ADD(driver_info)
         
-        return driver_details
+        RETURN driver_details
 ```
 
 ### 2. Matching Service
-```python
-class RideMatchingService:
-    def __init__(self):
-        self.location_service = LocationService()
-        self.pricing_service = PricingService()
-        self.notification_service = NotificationService()
+```
+CLASS RideMatchingService:
+    INITIALIZE:
+        location_service = LocationService()
+        pricing_service = PricingService()
+        notification_service = NotificationService()
         
-    async def request_ride(self, rider_id, pickup_location, destination, ride_type='standard'):
-        # Create ride request
+    FUNCTION request_ride(rider_id, pickup_location, destination, ride_type):
+        // Create ride request
         ride_request = {
-            'id': str(uuid.uuid4()),
-            'rider_id': rider_id,
-            'pickup_lat': pickup_location['lat'],
-            'pickup_lng': pickup_location['lng'],
-            'destination_lat': destination['lat'],
-            'destination_lng': destination['lng'],
-            'ride_type': ride_type,
-            'status': 'searching',
-            'created_at': datetime.now(),
-            'expires_at': datetime.now() + timedelta(minutes=5)
+            id: generate_unique_id(),
+            rider_id: rider_id,
+            pickup_lat: pickup_location.lat,
+            pickup_lng: pickup_location.lng,
+            destination_lat: destination.lat,
+            destination_lng: destination.lng,
+            ride_type: ride_type,
+            status: 'searching',
+            created_at: current_timestamp(),
+            expires_at: current_timestamp() + 5 minutes
         }
         
-        # Store ride request
-        await self.db.save_ride_request(ride_request)
+        // Store ride request
+        database.save_ride_request(ride_request)
         
-        # Find available drivers
-        available_drivers = await self.find_suitable_drivers(
-            pickup_location, ride_type
-        )
+        // Find available drivers
+        available_drivers = find_suitable_drivers(pickup_location, ride_type)
         
-        if not available_drivers:
-            return {
-                'status': 'no_drivers_available',
-                'estimated_wait': await self.estimate_wait_time(pickup_location)
+        IF available_drivers IS EMPTY:
+            RETURN {
+                status: 'no_drivers_available',
+                estimated_wait: estimate_wait_time(pickup_location)
             }
         
-        # Start matching process
-        match_result = await self.match_with_drivers(ride_request, available_drivers)
+        // Start matching process
+        match_result = match_with_drivers(ride_request, available_drivers)
         
-        return match_result
+        RETURN match_result
     
-    async def find_suitable_drivers(self, pickup_location, ride_type):
-        # Get nearby drivers
-        nearby_drivers = await self.location_service.find_nearby_drivers(
-            pickup_location['lat'], 
-            pickup_location['lng'],
-            radius_km=10,
-            limit=50
+    FUNCTION find_suitable_drivers(pickup_location, ride_type):
+        // Get nearby drivers
+        nearby_drivers = location_service.find_nearby_drivers(
+            pickup_location.lat, 
+            pickup_location.lng,
+            radius_km: 10,
+            limit: 50
         )
         
-        # Filter suitable drivers
+        // Filter suitable drivers
         suitable_drivers = []
-        for driver in nearby_drivers:
-            if await self.is_driver_suitable(driver, ride_type):
-                # Calculate ETA to pickup
-                eta = await self.maps_service.calculate_eta(
-                    (driver['current_lat'], driver['current_lng']),
-                    (pickup_location['lat'], pickup_location['lng'])
+        FOR EACH driver IN nearby_drivers:
+            IF is_driver_suitable(driver, ride_type):
+                // Calculate ETA to pickup
+                eta = maps_service.calculate_eta(
+                    FROM: (driver.current_lat, driver.current_lng),
+                    TO: (pickup_location.lat, pickup_location.lng)
                 )
                 
-                driver['pickup_eta_minutes'] = eta
-                suitable_drivers.append(driver)
+                driver.pickup_eta_minutes = eta
+                suitable_drivers.ADD(driver)
         
-        # Sort by ETA and rating
-        suitable_drivers.sort(key=lambda d: (d['pickup_eta_minutes'], -d['rating']))
+        // Sort by ETA and rating
+        SORT suitable_drivers BY (pickup_eta_minutes ASC, rating DESC)
         
-        return suitable_drivers[:10]  # Top 10 candidates
+        RETURN suitable_drivers[0:10]  // Top 10 candidates
     
-    async def match_with_drivers(self, ride_request, drivers):
-        # Sequential matching - try drivers one by one
-        for driver in drivers:
-            # Send ride request to driver
-            notification_sent = await self.notification_service.send_ride_request(
-                driver['id'], ride_request
+    FUNCTION match_with_drivers(ride_request, drivers):
+        // Sequential matching - try drivers one by one
+        FOR EACH driver IN drivers:
+            // Send ride request to driver
+            notification_sent = notification_service.send_ride_request(
+                driver.id, ride_request
             )
             
-            if notification_sent:
-                # Wait for driver response (with timeout)
-                response = await self.wait_for_driver_response(
-                    driver['id'], 
-                    ride_request['id'],
-                    timeout_seconds=15
+            IF notification_sent:
+                // Wait for driver response (with timeout)
+                response = wait_for_driver_response(
+                    driver.id, 
+                    ride_request.id,
+                    timeout: 15 seconds
                 )
                 
-                if response == 'accepted':
-                    # Match successful
-                    return await self.finalize_match(ride_request, driver)
-                elif response == 'declined':
-                    # Try next driver
-                    continue
-                else:
-                    # Timeout - try next driver
-                    continue
+                IF response == 'accepted':
+                    // Match successful
+                    RETURN finalize_match(ride_request, driver)
+                ELSE IF response == 'declined':
+                    // Try next driver
+                    CONTINUE
+                ELSE:
+                    // Timeout - try next driver
+                    CONTINUE
         
-        # No drivers accepted
-        return {
-            'status': 'no_match_found',
-            'message': 'No drivers accepted the ride request'
+        // No drivers accepted
+        RETURN {
+            status: 'no_match_found',
+            message: 'No drivers accepted the ride request'
         }
     
-    async def finalize_match(self, ride_request, driver):
-        # Create trip record
+    FUNCTION finalize_match(ride_request, driver):
+        // Create trip record
         trip = {
-            'id': str(uuid.uuid4()),
-            'rider_id': ride_request['rider_id'],
-            'driver_id': driver['id'],
-            'pickup_lat': ride_request['pickup_lat'],
-            'pickup_lng': ride_request['pickup_lng'],
-            'destination_lat': ride_request['destination_lat'],
-            'destination_lng': ride_request['destination_lng'],
-            'status': 'driver_assigned',
-            'estimated_pickup_time': datetime.now() + timedelta(minutes=driver['pickup_eta_minutes']),
-            'created_at': datetime.now()
+            id: generate_unique_id(),
+            rider_id: ride_request.rider_id,
+            driver_id: driver.id,
+            pickup_lat: ride_request.pickup_lat,
+            pickup_lng: ride_request.pickup_lng,
+            destination_lat: ride_request.destination_lat,
+            destination_lng: ride_request.destination_lng,
+            status: 'driver_assigned',
+            estimated_pickup_time: current_timestamp() + driver.pickup_eta_minutes,
+            created_at: current_timestamp()
         }
         
-        await self.db.create_trip(trip)
+        database.create_trip(trip)
         
-        # Update driver status
-        await self.db.update_driver_status(driver['id'], 'en_route_to_pickup')
+        // Update driver status
+        database.update_driver_status(driver.id, 'en_route_to_pickup')
         
-        # Notify both parties
-        await self.notification_service.notify_match_success(trip)
+        // Notify both parties
+        notification_service.notify_match_success(trip)
         
-        return {
-            'status': 'matched',
-            'trip_id': trip['id'],
-            'driver': driver,
-            'estimated_pickup_time': trip['estimated_pickup_time']
+        RETURN {
+            status: 'matched',
+            trip_id: trip.id,
+            driver: driver,
+            estimated_pickup_time: trip.estimated_pickup_time
         }
 ```
 
 ### 3. Pricing Service
-```python
-class PricingService:
-    def __init__(self):
-        self.base_fare = 2.50
-        self.per_mile_rate = 1.75
-        self.per_minute_rate = 0.35
-        self.surge_multiplier_cache = {}
+```
+CLASS PricingService:
+    INITIALIZE:
+        base_fare = 2.50
+        per_mile_rate = 1.75
+        per_minute_rate = 0.35
+        surge_multiplier_cache = MAP()
         
-    async def calculate_trip_price(self, pickup_location, destination, ride_type='standard'):
-        # Calculate distance and time
-        route_info = await self.maps_service.get_route_info(
-            pickup_location, destination
-        )
+    FUNCTION calculate_trip_price(pickup_location, destination, ride_type):
+        // Calculate distance and time
+        route_info = maps_service.get_route_info(pickup_location, destination)
         
-        distance_miles = route_info['distance_km'] * 0.621371
-        estimated_duration_minutes = route_info['duration_seconds'] / 60
+        distance_miles = route_info.distance_km * 0.621371
+        estimated_duration_minutes = route_info.duration_seconds / 60
         
-        # Base calculation
-        base_price = self.base_fare
-        distance_price = distance_miles * self.per_mile_rate
-        time_price = estimated_duration_minutes * self.per_minute_rate
+        // Base calculation
+        base_price = base_fare
+        distance_price = distance_miles * per_mile_rate
+        time_price = estimated_duration_minutes * per_minute_rate
         
         subtotal = base_price + distance_price + time_price
         
-        # Apply ride type multiplier
-        type_multiplier = self.get_ride_type_multiplier(ride_type)
-        subtotal *= type_multiplier
+        // Apply ride type multiplier
+        type_multiplier = get_ride_type_multiplier(ride_type)
+        subtotal = subtotal * type_multiplier
         
-        # Apply surge pricing
-        surge_multiplier = await self.get_surge_multiplier(pickup_location)
+        // Apply surge pricing
+        surge_multiplier = get_surge_multiplier(pickup_location)
         final_price = subtotal * surge_multiplier
         
-        return {
-            'base_fare': base_price,
-            'distance_fare': distance_price,
-            'time_fare': time_price,
-            'subtotal': subtotal,
-            'surge_multiplier': surge_multiplier,
-            'total_price': final_price,
-            'currency': 'USD'
+        RETURN {
+            base_fare: base_price,
+            distance_fare: distance_price,
+            time_fare: time_price,
+            subtotal: subtotal,
+            surge_multiplier: surge_multiplier,
+            total_price: final_price,
+            currency: 'USD'
         }
     
-    async def get_surge_multiplier(self, location):
-        # Calculate surge based on supply/demand ratio
-        grid_id = self.get_grid_id(location['lat'], location['lng'])
+    FUNCTION get_surge_multiplier(location):
+        // Calculate surge based on supply/demand ratio
+        grid_id = get_grid_id(location.lat, location.lng)
         
-        # Check cache first
-        cache_key = f"surge:{grid_id}"
-        cached_surge = self.surge_multiplier_cache.get(cache_key)
-        if cached_surge and cached_surge['expires'] > time.time():
-            return cached_surge['multiplier']
+        // Check cache first
+        cache_key = "surge:" + grid_id
+        cached_surge = surge_multiplier_cache.get(cache_key)
+        IF cached_surge EXISTS AND cached_surge.expires > current_timestamp():
+            RETURN cached_surge.multiplier
         
-        # Calculate current supply/demand
-        supply_demand = await self.calculate_supply_demand(grid_id)
+        // Calculate current supply/demand
+        supply_demand = calculate_supply_demand(grid_id)
         
-        if supply_demand['demand'] == 0:
+        IF supply_demand.demand == 0:
             surge_multiplier = 1.0
-        else:
-            ratio = supply_demand['supply'] / supply_demand['demand']
+        ELSE:
+            ratio = supply_demand.supply / supply_demand.demand
             
-            if ratio >= 1.0:
-                surge_multiplier = 1.0  # No surge
-            elif ratio >= 0.5:
+            IF ratio >= 1.0:
+                surge_multiplier = 1.0  // No surge
+            ELSE IF ratio >= 0.5:
                 surge_multiplier = 1.2
-            elif ratio >= 0.3:
+            ELSE IF ratio >= 0.3:
                 surge_multiplier = 1.5
-            elif ratio >= 0.1:
+            ELSE IF ratio >= 0.1:
                 surge_multiplier = 2.0
-            else:
-                surge_multiplier = 3.0  # Maximum surge
+            ELSE:
+                surge_multiplier = 3.0  // Maximum surge
         
-        # Cache for 2 minutes
-        self.surge_multiplier_cache[cache_key] = {
-            'multiplier': surge_multiplier,
-            'expires': time.time() + 120
+        // Cache for 2 minutes
+        surge_multiplier_cache[cache_key] = {
+            multiplier: surge_multiplier,
+            expires: current_timestamp() + 120
         }
         
-        return surge_multiplier
+        RETURN surge_multiplier
     
-    async def calculate_supply_demand(self, grid_id):
-        # Get grid bounds
-        grid_bounds = self.get_grid_bounds(grid_id)
+    FUNCTION calculate_supply_demand(grid_id):
+        // Get grid bounds
+        grid_bounds = get_grid_bounds(grid_id)
         
-        # Count available drivers in grid
-        available_drivers = await self.location_service.count_drivers_in_area(
-            grid_bounds, status='available'
+        // Count available drivers in grid
+        available_drivers = location_service.count_drivers_in_area(
+            grid_bounds, status: 'available'
         )
         
-        # Count pending ride requests in grid
-        pending_requests = await self.db.count_pending_requests_in_area(grid_bounds)
+        // Count pending ride requests in grid
+        pending_requests = database.count_pending_requests_in_area(grid_bounds)
         
-        return {
-            'supply': available_drivers,
-            'demand': pending_requests
+        RETURN {
+            supply: available_drivers,
+            demand: pending_requests
         }
 ```
 
 ### 4. Database Schema
-```sql
--- Users table
-CREATE TABLE users (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    phone_number VARCHAR(15) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE,
-    first_name VARCHAR(50),
-    last_name VARCHAR(50),
-    user_type ENUM('rider', 'driver', 'both') DEFAULT 'rider',
-    profile_image_url TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_phone (phone_number),
-    INDEX idx_email (email)
-);
+```
+// Users table
+TABLE users:
+    id: BIGINT (PRIMARY KEY, AUTO_INCREMENT)
+    phone_number: STRING(15) (UNIQUE, NOT NULL)
+    email: STRING(255) (UNIQUE)
+    first_name: STRING(50)
+    last_name: STRING(50)
+    user_type: ENUM('rider', 'driver', 'both') (DEFAULT: 'rider')
+    profile_image_url: TEXT
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    
+    INDEXES:
+        (phone_number)
+        (email)
 
--- Drivers table (additional driver-specific info)
-CREATE TABLE drivers (
-    user_id BIGINT PRIMARY KEY,
-    license_number VARCHAR(50) UNIQUE NOT NULL,
-    vehicle_make VARCHAR(50),
-    vehicle_model VARCHAR(50),
-    vehicle_year YEAR,
-    vehicle_color VARCHAR(30),
-    license_plate VARCHAR(20),
-    status ENUM('available', 'busy', 'offline') DEFAULT 'offline',
-    current_lat DECIMAL(10, 8),
-    current_lng DECIMAL(11, 8),
-    rating DECIMAL(3, 2) DEFAULT 5.00,
-    total_trips INT DEFAULT 0,
-    earnings_total DECIMAL(10, 2) DEFAULT 0,
-    last_location_update TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_status_location (status, current_lat, current_lng),
-    INDEX idx_rating (rating)
-);
+// Drivers table (additional driver-specific info)
+TABLE drivers:
+    user_id: BIGINT (PRIMARY KEY, FOREIGN KEY)
+    license_number: STRING(50) (UNIQUE, NOT NULL)
+    vehicle_make: STRING(50)
+    vehicle_model: STRING(50)
+    vehicle_year: YEAR
+    vehicle_color: STRING(30)
+    license_plate: STRING(20)
+    status: ENUM('available', 'busy', 'offline') (DEFAULT: 'offline')
+    current_lat: DECIMAL(10, 8)
+    current_lng: DECIMAL(11, 8)
+    rating: DECIMAL(3, 2) (DEFAULT: 5.00)
+    total_trips: INTEGER (DEFAULT: 0)
+    earnings_total: DECIMAL(10, 2) (DEFAULT: 0)
+    last_location_update: TIMESTAMP
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    
+    INDEXES:
+        (status, current_lat, current_lng)
+        (rating)
 
--- Trips table (partitioned by created_at)
-CREATE TABLE trips (
-    id VARCHAR(36) PRIMARY KEY,
-    rider_id BIGINT NOT NULL,
-    driver_id BIGINT NOT NULL,
-    pickup_lat DECIMAL(10, 8) NOT NULL,
-    pickup_lng DECIMAL(11, 8) NOT NULL,
-    pickup_address TEXT,
-    destination_lat DECIMAL(10, 8),
-    destination_lng DECIMAL(11, 8),
-    destination_address TEXT,
-    status ENUM('requested', 'driver_assigned', 'driver_arrived', 'in_progress', 'completed', 'cancelled') DEFAULT 'requested',
-    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    started_at TIMESTAMP NULL,
-    completed_at TIMESTAMP NULL,
-    distance_km DECIMAL(8, 2),
-    duration_minutes INT,
-    fare_amount DECIMAL(8, 2),
-    surge_multiplier DECIMAL(3, 2) DEFAULT 1.00,
-    payment_method VARCHAR(20),
-    payment_status ENUM('pending', 'completed', 'failed') DEFAULT 'pending',
-    rider_rating TINYINT,
-    driver_rating TINYINT,
-    INDEX idx_rider_created (rider_id, requested_at DESC),
-    INDEX idx_driver_created (driver_id, requested_at DESC),
-    INDEX idx_status_created (status, requested_at),
-    FOREIGN KEY (rider_id) REFERENCES users(id),
-    FOREIGN KEY (driver_id) REFERENCES users(id)
-) PARTITION BY RANGE (YEAR(requested_at)) (
-    PARTITION p2023 VALUES LESS THAN (2024),
-    PARTITION p2024 VALUES LESS THAN (2025),
-    PARTITION p2025 VALUES LESS THAN (2026)
-);
+// Trips table (partitioned by created_at)
+TABLE trips:
+    id: STRING(36) (PRIMARY KEY)
+    rider_id: BIGINT (FOREIGN KEY)
+    driver_id: BIGINT (FOREIGN KEY)
+    pickup_lat: DECIMAL(10, 8) (NOT NULL)
+    pickup_lng: DECIMAL(11, 8) (NOT NULL)
+    pickup_address: TEXT
+    destination_lat: DECIMAL(10, 8)
+    destination_lng: DECIMAL(11, 8)
+    destination_address: TEXT
+    status: ENUM('requested', 'driver_assigned', 'driver_arrived', 'in_progress', 'completed', 'cancelled')
+    requested_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    started_at: TIMESTAMP (NULLABLE)
+    completed_at: TIMESTAMP (NULLABLE)
+    distance_km: DECIMAL(8, 2)
+    duration_minutes: INTEGER
+    fare_amount: DECIMAL(8, 2)
+    surge_multiplier: DECIMAL(3, 2) (DEFAULT: 1.00)
+    payment_method: STRING(20)
+    payment_status: ENUM('pending', 'completed', 'failed') (DEFAULT: 'pending')
+    rider_rating: TINYINT
+    driver_rating: TINYINT
+    
+    INDEXES:
+        (rider_id, requested_at DESC)
+        (driver_id, requested_at DESC)
+        (status, requested_at)
+    
+    PARTITIONING: RANGE BY YEAR(requested_at)
+        PARTITION p2023: VALUES < 2024
+        PARTITION p2024: VALUES < 2025
+        PARTITION p2025: VALUES < 2026
 
--- Trip locations (for real-time tracking)
-CREATE TABLE trip_locations (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    trip_id VARCHAR(36) NOT NULL,
-    lat DECIMAL(10, 8) NOT NULL,
-    lng DECIMAL(11, 8) NOT NULL,
-    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_trip_time (trip_id, recorded_at),
-    FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
-);
+// Trip locations (for real-time tracking)
+TABLE trip_locations:
+    id: BIGINT (PRIMARY KEY, AUTO_INCREMENT)
+    trip_id: STRING(36) (FOREIGN KEY)
+    lat: DECIMAL(10, 8) (NOT NULL)
+    lng: DECIMAL(11, 8) (NOT NULL)
+    recorded_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    
+    INDEXES:
+        (trip_id, recorded_at)
 
--- Payments table
-CREATE TABLE payments (
-    id VARCHAR(36) PRIMARY KEY,
-    trip_id VARCHAR(36) NOT NULL,
-    amount DECIMAL(8, 2) NOT NULL,
-    currency VARCHAR(3) DEFAULT 'USD',
-    payment_method VARCHAR(50),
-    payment_gateway_id VARCHAR(100),
-    status ENUM('pending', 'processing', 'completed', 'failed', 'refunded') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP NULL,
-    INDEX idx_trip (trip_id),
-    INDEX idx_status_created (status, created_at),
-    FOREIGN KEY (trip_id) REFERENCES trips(id)
-);
+// Payments table
+TABLE payments:
+    id: STRING(36) (PRIMARY KEY)
+    trip_id: STRING(36) (FOREIGN KEY)
+    amount: DECIMAL(8, 2) (NOT NULL)
+    currency: STRING(3) (DEFAULT: 'USD')
+    payment_method: STRING(50)
+    payment_gateway_id: STRING(100)
+    status: ENUM('pending', 'processing', 'completed', 'failed', 'refunded')
+    created_at: TIMESTAMP (DEFAULT: CURRENT_TIME)
+    completed_at: TIMESTAMP (NULLABLE)
+    
+    INDEXES:
+        (trip_id)
+        (status, created_at)
 ```
 
 ## Detailed Questions & Answers
@@ -509,55 +503,56 @@ class QuadTree:
         if not self.divided:
             self.subdivide()
             
-        # Try to insert in children
-        for child in self.children:
-            if child.insert(point):
-                return True
+        // Try to insert in children
+        FOR EACH child IN children:
+            IF child.insert(point):
+                RETURN true
                 
-        return False
+        RETURN false
     
-    def query_range(self, range_bounds):
-        # Find all points within the given bounds
+    FUNCTION query_range(range_bounds):
+        // Find all points within the given bounds
         found_points = []
         
-        if not self.intersects(range_bounds):
-            return found_points
+        IF NOT intersects(range_bounds):
+            RETURN found_points
             
-        # Check points in this node
-        for point in self.points:
-            if self.point_in_range(point, range_bounds):
-                found_points.append(point)
+        // Check points in this node
+        FOR EACH point IN points:
+            IF point_in_range(point, range_bounds):
+                found_points.ADD(point)
         
-        # Check children if divided
-        if self.divided:
-            for child in self.children:
-                found_points.extend(child.query_range(range_bounds))
+        // Check children if divided
+        IF divided:
+            FOR EACH child IN children:
+                found_points.EXTEND(child.query_range(range_bounds))
                 
-        return found_points
+        RETURN found_points
 ```
 
 **3. Database Index Optimization**
-```sql
--- Spatial index for efficient geo queries
-CREATE SPATIAL INDEX idx_driver_location ON drivers(POINT(current_lng, current_lat));
+```
+// Spatial index for efficient geo queries
+CREATE SPATIAL INDEX idx_driver_location ON drivers(GEOSPATIAL_POINT(current_lng, current_lat))
 
--- Query nearby drivers using spatial functions
-SELECT 
-    user_id,
-    current_lat,
-    current_lng,
-    ST_Distance_Sphere(
-        POINT(current_lng, current_lat),
-        POINT(%s, %s)
-    ) / 1000 as distance_km
-FROM drivers
-WHERE status = 'available'
-    AND ST_Distance_Sphere(
-        POINT(current_lng, current_lat),
-        POINT(%s, %s)
-    ) <= %s * 1000  -- radius in meters
-ORDER BY distance_km
-LIMIT 20;
+// Query nearby drivers using spatial functions
+QUERY:
+    SELECT 
+        user_id,
+        current_lat,
+        current_lng,
+        DISTANCE_SPHERE(
+            GEOSPATIAL_POINT(current_lng, current_lat),
+            GEOSPATIAL_POINT(target_lng, target_lat)
+        ) / 1000 as distance_km
+    FROM drivers
+    WHERE status = 'available'
+        AND DISTANCE_SPHERE(
+            GEOSPATIAL_POINT(current_lng, current_lat),
+            GEOSPATIAL_POINT(target_lng, target_lat)
+        ) <= radius_meters
+    ORDER BY distance_km
+    LIMIT 20
 ```
 
 ### Q2: How do you handle driver-rider matching at scale?
@@ -604,78 +599,78 @@ class IntelligentMatcher:
         eta_score = max(0, 15 - eta_minutes)  # Max 15 points
         score += eta_score * 0.3  # 30% weight
         
-        # Driver rating (higher rating is better)
-        rating_score = driver['rating']  # 0-5 scale
-        score += rating_score * 0.2  # 20% weight
+        // Driver rating (higher rating is better)
+        rating_score = driver.rating  // 0-5 scale
+        score = score + (rating_score * 0.2)  // 20% weight
         
-        # Driver utilization (balance load)
-        utilization_score = await self.get_utilization_bonus(driver['id'])
-        score += utilization_score * 0.1  # 10% weight
+        // Driver utilization (balance load)
+        utilization_score = get_utilization_bonus(driver.id)
+        score = score + (utilization_score * 0.1)  // 10% weight
         
-        return score
+        RETURN score
     
-    async def get_utilization_bonus(self, driver_id):
-        # Give bonus to drivers with fewer recent trips (load balancing)
-        recent_trips = await self.db.count_recent_trips(driver_id, hours=2)
+    FUNCTION get_utilization_bonus(driver_id):
+        // Give bonus to drivers with fewer recent trips (load balancing)
+        recent_trips = database.count_recent_trips(driver_id, hours: 2)
         
-        if recent_trips == 0:
-            return 2.0  # Bonus for inactive drivers
-        elif recent_trips <= 2:
-            return 1.0
-        else:
-            return 0.0
+        IF recent_trips == 0:
+            RETURN 2.0  // Bonus for inactive drivers
+        ELSE IF recent_trips <= 2:
+            RETURN 1.0
+        ELSE:
+            RETURN 0.0
 ```
 
 **2. Batch Matching for Efficiency**
-```python
-class BatchMatcher:
-    async def process_matching_batch(self, pending_requests):
-        # Group requests by geographic area for efficient processing
-        geographic_groups = self.group_by_geography(pending_requests)
+```
+CLASS BatchMatcher:
+    FUNCTION process_matching_batch(pending_requests):
+        // Group requests by geographic area for efficient processing
+        geographic_groups = group_by_geography(pending_requests)
         
         matching_tasks = []
-        for group in geographic_groups:
-            task = self.process_geographic_group(group)
-            matching_tasks.append(task)
+        FOR EACH group IN geographic_groups:
+            task = process_geographic_group(group)
+            matching_tasks.ADD(task)
         
-        # Process all groups in parallel
-        results = await asyncio.gather(*matching_tasks)
+        // Process all groups in parallel
+        results = EXECUTE_ALL_PARALLEL(matching_tasks)
         
-        return self.flatten_results(results)
+        RETURN flatten_results(results)
     
-    def group_by_geography(self, requests):
-        # Use geohash to group nearby requests
-        groups = {}
+    FUNCTION group_by_geography(requests):
+        // Use geohash to group nearby requests
+        groups = MAP()
         
-        for request in requests:
-            geohash = geohash2.encode(
-                request['pickup_lat'], 
-                request['pickup_lng'], 
-                precision=6  # ~1km precision
+        FOR EACH request IN requests:
+            geohash = ENCODE_GEOHASH(
+                request.pickup_lat, 
+                request.pickup_lng, 
+                precision: 6  // ~1km precision
             )
             
-            if geohash not in groups:
+            IF geohash NOT IN groups:
                 groups[geohash] = []
-            groups[geohash].append(request)
+            groups[geohash].ADD(request)
         
-        return list(groups.values())
+        RETURN VALUES(groups)
     
-    async def process_geographic_group(self, requests):
-        if not requests:
-            return []
+    FUNCTION process_geographic_group(requests):
+        IF requests IS EMPTY:
+            RETURN []
         
-        # Find drivers for this geographic area
-        center_lat = sum(r['pickup_lat'] for r in requests) / len(requests)
-        center_lng = sum(r['pickup_lng'] for r in requests) / len(requests)
+        // Find drivers for this geographic area
+        center_lat = AVERAGE(r.pickup_lat FOR r IN requests)
+        center_lng = AVERAGE(r.pickup_lng FOR r IN requests)
         
-        available_drivers = await self.location_service.find_nearby_drivers(
-            center_lat, center_lng, radius_km=15, limit=100
+        available_drivers = location_service.find_nearby_drivers(
+            center_lat, center_lng, radius_km: 15, limit: 100
         )
         
-        # Match requests to drivers using Hungarian algorithm for optimal assignment
-        matches = await self.optimal_assignment(requests, available_drivers)
+        // Match requests to drivers using optimal assignment algorithm
+        matches = optimal_assignment(requests, available_drivers)
         
-        return matches
+        RETURN matches
 ```
 
 ### Q3: How do you implement real-time trip tracking?
