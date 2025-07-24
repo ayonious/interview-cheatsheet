@@ -41,6 +41,18 @@ A comprehensive guide to the best platforms for practicing backend interview cod
 - **Strengths**: Open source, community-driven, constantly updated
 - **Focus**: Scalability concepts, distributed systems
 
+### ByteByteGo (YouTube)
+- **Best for**: Visual system design explanations and real-world examples
+- **Strengths**: High-quality animations, practical case studies, industry insights
+- **Focus**: System architecture patterns, scalability solutions, tech company systems
+- **URL**: https://www.youtube.com/@ByteByteGo
+
+### CodeKarle (YouTube)
+- **Best for**: System design interviews and coding preparation
+- **Strengths**: Interview-focused content, practical examples, step-by-step explanations
+- **Focus**: System design walkthroughs, coding interview preparation
+- **URL**: https://www.youtube.com/@CodeKarle
+
 ## Database & SQL Practice
 
 ### SQLBolt
