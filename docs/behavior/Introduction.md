@@ -161,6 +161,12 @@ How does the team maintain sustainable practices during high-growth periods?"
 
 ## Quick Preparation Checklist
 
+**✅ Profile & Application Setup**
+- [ ] LinkedIn profile updated with latest experience, skills, and projects
+- [ ] Professional headshot and compelling headline on LinkedIn
+- [ ] Greenhouse account created at https://my.greenhouse.io/ with updated CV
+- [ ] Resume/CV tailored for quick applications through job platforms
+
 **✅ Company Research Done**
 - [ ] Crunchbase business model and funding
 - [ ] Glassdoor employee sentiment and interview insights  
