@@ -7,8 +7,8 @@ on:
     branches: [ main, master ]
 
 env:
-  # Use Node.js 22 to match Netlify configuration
-  NODE_VERSION: '22'
+  # Use Node.js 24 to match Netlify configuration
+  NODE_VERSION: '24'
 
 jobs:
   cypress-run:
