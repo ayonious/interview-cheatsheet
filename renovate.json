@@ -5,18 +5,16 @@
   "groupSlug": "all",
   "packageRules": [
     {
-      "packagePatterns": [ "*" ],
-      "excludePackagePatterns": ["webpack-cli"],
+      "packagePatterns": ["*"],
       "groupName": "all dependencies",
-      "groupSlug": "all",
-      "automerge": true
+      "groupSlug": "all"
     }
   ],
   "rangeStrategy": "bump",
   "automerge": true,
+  "automergeType": "pr",
   "schedule": "before 3am on Monday",
   "lockFileMaintenance": {
-    "enabled": true,
-    "automerge": true
+    "enabled": true
   }
 }
