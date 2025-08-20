@@ -7,11 +7,15 @@
 
 ## 🤷 But Why another Guide?
 
-This one is my personal one. So only contains things that I need to learn or just take a look. For example I dont really have interest much on Java or Python so those are not included here. But this has very detailed discussions on Nodejs async operations / Event-loopy-doopy.
+Imagine after passing all the super hard interview questions some business manager asks you this:
 
-Another reason Why I wrote it is because I was forgetting many basic things without much Practice. For example when is SQL better than noSQL. I know the reason but its better to read it once before Interveiw than trying to hard remember and then timing out
+> And what kind of thigns you do in order to learn new technology? For example reading books or subscribe to Hackernews..?
 
-Another reason is getting ready for communication related questions that can really catch you in the act if you are not prepared.
+And you just suddenly go searching your entire brain for an answer. You just had lunch and you are almost in some coma and someone is asking you to answer questions to prove how awesome you are. Do you think its easy? Just gonna make 5 points and all done? And only things that come out is discussion in tech meetings. Going to different workshops. And Using AI. And then you say something like reading books is quite dumb because Tech changes so quickly.
+
+Just look at your answer one more time. Based on how you forgot to mention all your achievements in opensource projects, working on multiple coursera/udemy courses, reading books of "Art of programming language" your answer like this could be seen as a big Red flag. And yes these are some problems that can be a big deal. 
+
+If you answer one question in a dumb way that hurts 10 times more than all your good answers. So why not always be ready?
 
 ## 🔍 Topics
 
