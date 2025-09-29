@@ -266,7 +266,7 @@ location /api {
 - **Cache Hit Ratio**: >90% is good
 - **Bandwidth Savings**: 60-80% typical
 - **Origin Offload**: Traffic served from edge
-- **TTFB**: Time to first byte (<200ms good)
+- **TTFB**: Time to first byte (&lt;200ms good)
 
 ### Monitoring
 ```javascript
