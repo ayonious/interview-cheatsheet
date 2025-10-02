@@ -5,17 +5,40 @@
 
 > My interview Preparation Guide. Having Interview preparation guide is against my will but still better prepare and be confident than not preparing at all
 
-## 🤷 But Why another Guide?
+## 🤷 But Why Another Guide?
 
-Imagine after passing all the super hard interview questions some business manager asks you this:
+Picture this: you've just crushed all the technical questions 💪, and then a business manager casually asks:
 
-> And what kind of thigns you do in order to learn new technology? For example reading books or subscribe to Hackernews..?
+> "So, what do you do to learn new technologies? Reading books? Following HackerNews...?"
 
-And you just suddenly go searching your entire brain for an answer. You just had lunch and you are almost in some coma and someone is asking you to answer questions to prove how awesome you are. Do you think its easy? Just gonna make 5 points and all done? And only things that come out is discussion in tech meetings. Going to different workshops. And Using AI. And then you say something like reading books is quite dumb because Tech changes so quickly.
+Suddenly, your mind goes blank 🧠💭. You just had lunch, you're in a semi-food-coma state, and now you need to prove how amazing you are. Is it easy? Not at all! 😅
 
-Just look at your answer one more time. Based on how you forgot to mention all your achievements in opensource projects, working on multiple coursera/udemy courses, reading books of "Art of programming language" your answer like this could be seen as a big Red flag. And yes these are some problems that can be a big deal. 
+You scramble and mention:
+- 💬 Tech meeting discussions
+- 🎓 Attending workshops
+- 🤖 Using AI
+- 📚 "Books? Nah, tech changes too fast..."
 
-If you answer one question in a dumb way that hurts 10 times more than all your good answers. So why not always be ready?
+**Wait, rewind!** ⏪ Look at that answer again. Where did you mention:
+- 🌟 Your open-source contributions?
+- 📖 Those Coursera/Udemy courses you completed?
+- 📕 Reading "Art of Computer Programming"?
+
+Your hasty response just raised a **BIG RED FLAG** 🚩. One weak answer can overshadow ten great ones. So why not always be ready? 🎯
+
+---
+
+### 💡 A Word of Wisdom
+
+I once read a beautiful book about finding love, and the author said something profound:
+
+> *"Why leave your love to the hands of luck? Are you sure today's decision is your final decision? Are you sure that person you dated is a big red flag? Are you sure you want to leave this matter on the hands of just a feeling? What about your current live situation? Lots of stress in family/Job, are you sure those are not influencing your mood today in this matter?"*
+
+Job interviews are just like this 💼💕. You'll meet ~5 people, and there's a decent chance at least one won't click with you—and their opinion might carry weight.
+
+Since companies have turned hiring into something **UNPREDICTABLE** 🎲🎪, why risk walking into that room unprepared?
+
+**Let's stack the odds in your favor!** 🚀✨
 
 ## 🔍 Topics
 
@@ -62,3 +85,4 @@ yarn test:e2e
 - **Testing**: [Cypress 14.5.2](https://www.cypress.io/)
 - **CI/CD**: [GitHub Actions](https://github.com/features/actions)
 - **Deployment**: [Netlify](https://www.netlify.com/)
+# docker-practice

@@ -208,4 +208,80 @@ Anticipate deeper questions:
 - "What was the long-term impact?"
 - "How has this experience influenced your approach since then?"
 
-Remember: The same experience can often be used to answer multiple types of questions by emphasizing different aspects of your role and impact. 
+Remember: The same experience can often be used to answer multiple types of questions by emphasizing different aspects of your role and impact.
+
+---
+
+## Questions from My Side
+
+### Development Process & Infrastructure
+1. **CI/CD Pipeline**: Do you use CI/CD pipelines? I mean once a backend code is merged, does it go to production within a click of a button?
+
+2. **Innovation & Experimentation**: How hard is it to create something new in your company?
+   - For example, I want to bootstrap a new service. This service could be used as a hackathon project.
+   - I have an idea, but there is no resource for me to implement this idea. What would the process look like?
+
+3. **AI Tools & Resources**: How much AI do you use in your company?
+   - If I use some AI tool that costs, say $200, which is very standard, can I just ask for it?
+   - Are there any AI tools already provided to the team?
+
+### Technical Environment
+4. **Technology Stack**: What is your current tech stack, and how often do you evaluate new technologies?
+
+5. **Code Review Process**: What does your code review process look like? How long does it typically take from PR submission to merge?
+
+6. **Technical Debt**: How does the team handle technical debt? Is there dedicated time allocated for refactoring and improvements?
+
+7. **Testing Standards**: What are your testing requirements? (unit tests, integration tests, coverage expectations)
+
+### Team Culture & Work-Life Balance
+8. **On-Call Rotation**: Is there an on-call rotation? If yes, how often, and what does incident response look like?
+
+9. **Work Schedule**: What are the typical working hours? Is there flexibility for remote work or flexible hours?
+
+10. **Meeting Culture**: How many hours per week are typically spent in meetings? Are there any no-meeting days?
+
+11. **Learning & Development**: Is there a budget for conferences, courses, or certifications? How much time is allocated for learning?
+
+### Growth & Career Development
+12. **Career Progression**: What does the career progression path look like? How often are performance reviews conducted?
+
+13. **Mentorship**: Is there a mentorship program? How do senior engineers support junior team members?
+
+14. **Impact & Ownership**: Can you give examples of how engineers at my level have made significant impact in the past year?
+
+### Team Dynamics
+15. **Team Structure**: How is the engineering team structured? (squads, cross-functional teams, etc.)
+
+16. **Decision Making**: How are technical decisions made? Who has the final say on architectural choices?
+
+17. **Collaboration**: How do different teams collaborate? (backend, frontend, DevOps, product)
+
+### Product & Business
+18. **Product Roadmap**: How far ahead is the product roadmap planned? How much input do engineers have in product decisions?
+
+19. **Customer Interaction**: Do engineers interact directly with customers or users? How often?
+
+20. **Success Metrics**: How do you measure success for engineering projects? What metrics matter most to the company?
+
+### Challenges & Concerns
+21. **Biggest Challenges**: What are the biggest technical challenges the team is currently facing?
+
+22. **Team Concerns**: If you could change one thing about the team or company, what would it be?
+
+23. **Previous Person**: Why did the previous person in this role leave? (or Why is this position open?)
+
+### Future Vision
+24. **Company Growth**: What are the company's plans for growth in the next 1-2 years? How will that affect the engineering team?
+
+25. **Technology Evolution**: Where do you see the tech stack evolving in the next year?
+
+---
+
+### Tips for Asking Questions
+- **Prioritize** your questions based on what matters most to you
+- **Ask follow-ups** to get deeper insights
+- **Observe reactions** - hesitation or enthusiasm can tell you a lot
+- **Ask different interviewers different questions** to get varied perspectives
+- **Take notes** during the interview to remember the answers
+- **Save 1-2 questions** for the hiring manager specifically (career growth, team vision)
