@@ -36,7 +36,7 @@ I once read a beautiful book about finding love, and the author said something p
 
 Job interviews are just like this 💼💕. You'll meet ~5 people, and there's a decent chance at least one won't click with you—and their opinion might carry weight.
 
-Since companies have turned hiring into something **UNPREDICTABLE** 🎲🎪, why risk walking into that room unprepared?
+Since companies have turned hiring into something **UNPREDICTABLE** 🎲🎪 (why I think  this thats another topic) why risk walking into that room unprepared?
 
 **Let's stack the odds in your favor!** 🚀✨
 
