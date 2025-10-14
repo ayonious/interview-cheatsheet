@@ -10,7 +10,7 @@ const sources = [
         stopped at any stage. Funky question: Why should I hire you?
       </>
     ),
-    link: "docs/behavior/Introduction",
+    link: "docs/",
   },
   {
     title: <>Frontend</>,

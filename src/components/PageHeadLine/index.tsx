@@ -18,7 +18,7 @@ const UnColoredText = ({ text }) => <span>{text}</span>;
 const NavigationButtons = () => (
   <ButtonsContainer>
     <GetStartButton>
-      <Link to={useBaseUrl("docs/behavior/Introduction")}>🧙‍♂️ Behavior</Link>
+      <Link to={useBaseUrl("docs/")}>🧙‍♂️ Behavior</Link>
     </GetStartButton>
     <GetStartButton>
       <Link to={useBaseUrl("docs/backend/Databases")}>🏋️‍♀️ Backend</Link>
