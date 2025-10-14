@@ -1,10 +1,11 @@
+import Link from "@docusaurus/Link";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import React from "react";
 
 import sources from "../../utils/sources";
-import { FeatureImage, Features } from "./styles";
+import { FeatureImage, Features, FeatureButton } from "./styles";
 
-const Feature = ({ imageUrl, title, description }) => {
+const Feature = ({ imageUrl, title, description, link }) => {
   const imgUrl = useBaseUrl(imageUrl);
   return (
     <div className={"col col--4"}>
@@ -15,6 +16,9 @@ const Feature = ({ imageUrl, title, description }) => {
       )}
       <h3>{title}</h3>
       <p>{description}</p>
+      <FeatureButton>
+        <Link to={useBaseUrl(link)}>Explore</Link>
+      </FeatureButton>
     </div>
   );
 };

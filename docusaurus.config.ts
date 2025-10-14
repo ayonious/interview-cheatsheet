@@ -42,7 +42,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          sidebarCollapsible: false,
+          sidebarCollapsible: true,
           showLastUpdateAuthor: true,
           showLastUpdateTime: true,
           // this enabled the edit button for documentation
@@ -74,18 +74,21 @@ const config: Config = {
           type: 'doc',
           position: 'left',
           docId: 'behavior/Introduction',
+          sidebarId: 'behaviorSidebar',
           label: '🧙‍♂️ Behavior',
         },
         {
           type: 'doc',
           position: 'left',
           docId: 'backend/Databases',
+          sidebarId: 'backendSidebar',
           label: '🏋️‍♀️  Backend',
         },
         {
           type: 'doc',
           position: 'left',
           docId: 'frontend/Promise',
+          sidebarId: 'frontendSidebar',
           label: '💄 Frontend',
         },
         {

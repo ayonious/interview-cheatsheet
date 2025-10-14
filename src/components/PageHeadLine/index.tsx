@@ -5,6 +5,7 @@ import React from "react";
 import {
   ColoredWords,
   GetStartButton,
+  ButtonsContainer,
   Headline,
   HeadlineSub,
   HeadlineText,
@@ -14,10 +15,18 @@ import {
 const ColoredText = ({ text }) => <ColoredWords>{text}</ColoredWords>;
 const UnColoredText = ({ text }) => <span>{text}</span>;
 
-const GetStartedButton = () => (
-  <GetStartButton>
-    <Link to={useBaseUrl("docs/")}>START</Link>
-  </GetStartButton>
+const NavigationButtons = () => (
+  <ButtonsContainer>
+    <GetStartButton>
+      <Link to={useBaseUrl("docs/behavior/Introduction")}>🧙‍♂️ Behavior</Link>
+    </GetStartButton>
+    <GetStartButton>
+      <Link to={useBaseUrl("docs/backend/Databases")}>🏋️‍♀️ Backend</Link>
+    </GetStartButton>
+    <GetStartButton>
+      <Link to={useBaseUrl("docs/frontend/Promise")}>💄 Frontend</Link>
+    </GetStartButton>
+  </ButtonsContainer>
 );
 
 const ProductLogo = () => (
@@ -35,7 +44,7 @@ const PageHeadLine = () => {
           <ColoredText text=" Tech Interviews" />
           <UnColoredText text="cheat sheet" />
         </HeadlineText>
-        <GetStartedButton />
+        <NavigationButtons />
       </HeadlineSub>
     </Headline>
   );

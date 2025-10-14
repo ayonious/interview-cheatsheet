@@ -21,6 +21,14 @@ export const ColoredWords = styled.span`
   color: ${ColorPrimary};
 `;
 
+export const ButtonsContainer = styled.div`
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 30px;
+`;
+
 export const GetStartButton = styled.div`
   a {
     padding: 20px 40px;
