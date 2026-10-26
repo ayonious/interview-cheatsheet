@@ -5,7 +5,7 @@
     "types": ["cypress", "node"],
     "allowJs": true,
     "strict": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -13,13 +13,9 @@
     "emitDecoratorMetadata": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "module": "esnext"
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "../node_modules"
-  ]
-} 
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["../node_modules"]
+}

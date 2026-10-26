@@ -1,4 +1,22 @@
 {
-    "extends": "@tsconfig/docusaurus/tsconfig.json",
-    "include": ["src/"]
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "types": [
+      "node",
+      "@docusaurus/module-type-aliases",
+      "@docusaurus/theme-classic"
+    ],
+    "paths": {
+      "@site/*": ["./*"]
+    },
+    "skipLibCheck": true
+  },
+  "include": ["src/", "docusaurus.config.ts", "sidebars.ts"]
 }

@@ -2,7 +2,7 @@ import React from "react";
 
 const sources = [
   {
-    title: <>Behavioural Qustions</>,
+    title: "Behavioural Qustions",
     imageUrl: "img/undraw_interview_rmcf.svg",
     description: (
       <>
@@ -13,13 +13,13 @@ const sources = [
     link: "docs/",
   },
   {
-    title: <>Frontend</>,
+    title: "Frontend",
     imageUrl: "img/undraw_mobile_development_8gyo.svg",
     description: <>React, webpack, Gatsby, yarn</>,
     link: "docs/frontend/Promise",
   },
   {
-    title: <>Backend</>,
+    title: "Backend",
     imageUrl: "img/undraw_server_cluster_jwwq.svg",
     description: <>Database, Sharding, Async/Sync, Protocols, System Designs</>,
     link: "docs/backend/Databases",

@@ -1,65 +1,67 @@
 /// <reference types="cypress" />
 
-describe('Homepage Tests', () => {
+describe("Homepage Tests", () => {
   beforeEach(() => {
-    cy.visit('/')
-  })
+    cy.visit("/");
+  });
 
-  it('should load the homepage successfully', () => {
-    cy.get('h1').should('be.visible')
-    cy.title().should('include', 'Interview Cheatsheet')
-    cy.get('body').should('be.visible')
-  })
+  it("should load the homepage successfully", () => {
+    cy.get("h1").should("be.visible");
+    cy.title().should("include", "Interview Cheatsheet");
+    cy.get("body").should("be.visible");
+  });
 
-  it('should display the main navigation', () => {
-    cy.get('nav').should('be.visible')
-    
+  it("should display the main navigation", () => {
+    cy.get("nav").should("be.visible");
+
     // Check for main navigation items
-    cy.get('nav').should('contain.text', 'Behavior')
-    cy.get('nav').should('contain.text', 'Backend')
-    cy.get('nav').should('contain.text', 'Frontend')
-  })
+    cy.get("nav").should("contain.text", "Behavior");
+    cy.get("nav").should("contain.text", "Backend");
+    cy.get("nav").should("contain.text", "Frontend");
+  });
 
-  it('should have a functional GitHub link', () => {
-    cy.get('nav')
-      .contains('GitHub')
-      .should('have.attr', 'href')
-      .and('include', 'github.com')
-  })
+  it("should have a functional GitHub link", () => {
+    cy.get("nav")
+      .contains("GitHub")
+      .should("have.attr", "href")
+      .and("include", "github.com");
+  });
 
-  it('should display the hero section with correct content', () => {
+  it("should display the hero section with correct content", () => {
     // The hero content is in the PageHeadLine component
-    cy.get('main').should('be.visible')
-    cy.get('main').should('contain.text', 'Collection')
-    cy.get('main').should('contain.text', 'Tech Interviews')
-    cy.get('main').should('contain.text', 'cheat sheet')
-    
-    // Check for the START button
-    cy.get('a').contains('START').should('be.visible')
-  })
+    cy.get("main").should("be.visible");
+    cy.get("main").should("contain.text", "Collection");
+    cy.get("main").should("contain.text", "Tech Interviews");
+    cy.get("main").should("contain.text", "cheat sheet");
 
-  it('should be responsive across different screen sizes', () => {
+    // Check the hero navigation buttons.
+    for (const label of ["Behavior", "Backend", "Frontend"]) {
+      cy.get("main").contains("a", label).should("be.visible");
+    }
+  });
+
+  it("should be responsive across different screen sizes", () => {
     const viewports: Array<[number, number]> = [
       [1920, 1080], // Desktop
-      [1024, 768],  // Tablet
-      [375, 667],   // Mobile
-    ]
+      [1024, 768], // Tablet
+      [375, 667], // Mobile
+    ];
 
     viewports.forEach(([width, height]) => {
-      cy.viewport(width, height)
-      cy.get('nav').should('be.visible')
-      cy.get('main').should('be.visible')
-      cy.wait(500) // Allow time for responsive changes
-    })
-  })
+      cy.viewport(width, height);
+      cy.get("nav").should("be.visible");
+      cy.get("main").should("be.visible");
+      cy.wait(500); // Allow time for responsive changes
+    });
+  });
 
-  it('should have proper meta tags for SEO', () => {
+  it("should have proper meta tags for SEO", () => {
     cy.document().then((doc) => {
-      const metaDescription = doc.querySelector('meta[name="description"]')
-      expect(metaDescription).to.exist
-      
-      const ogTitle = doc.querySelector('meta[property="og:title"]')
-      expect(ogTitle).to.exist
-    })
-  })
-}) 
+      const metaDescription = doc.querySelector('meta[name="description"]');
+      expect(metaDescription).not.to.equal(null);
+
+      const ogTitle = doc.querySelector('meta[property="og:title"]');
+      expect(ogTitle).not.to.equal(null);
+    });
+  });
+});
