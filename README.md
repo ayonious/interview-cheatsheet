@@ -79,10 +79,14 @@ yarn test:e2e
 
 ## 🚀 Tech Stack
 
-- **Framework**: [Docusaurus 3.8.1](https://docusaurus.io/)
-- **Language**: [TypeScript 5.8.3](https://www.typescriptlang.org/)
-- **Runtime**: [Node.js 22](https://nodejs.org/)
-- **Testing**: [Cypress 14.5.2](https://www.cypress.io/)
+- **Framework**: [Docusaurus 3.10.2](https://docusaurus.io/)
+- **Language**: [TypeScript 7.0.2](https://www.typescriptlang.org/)
+- **Runtime**: [Node.js 24+](https://nodejs.org/)
+- **Testing**: [Cypress 16.2.0](https://www.cypress.io/)
 - **CI/CD**: [GitHub Actions](https://github.com/features/actions)
 - **Deployment**: [Netlify](https://www.netlify.com/)
 # docker-practice
+
+## TypeScript tooling
+
+`yarn typecheck` uses TypeScript 7. The `typescript` dependency aliases the official TypeScript 6 compatibility package so ESLint and other tools can still use the compiler API; `@typescript/native` supplies the TypeScript 7 `tsc` executable. See the [official compatibility guidance](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0).

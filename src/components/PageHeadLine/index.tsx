@@ -12,8 +12,10 @@ import {
   ProductLogoHomePage,
 } from "./styles";
 
-const ColoredText = ({ text }) => <ColoredWords>{text}</ColoredWords>;
-const UnColoredText = ({ text }) => <span>{text}</span>;
+const ColoredText = ({ text }: { text: string }) => (
+  <ColoredWords>{text}</ColoredWords>
+);
+const UnColoredText = ({ text }: { text: string }) => <span>{text}</span>;
 
 const NavigationButtons = () => (
   <ButtonsContainer>

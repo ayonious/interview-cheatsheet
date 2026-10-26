@@ -5,7 +5,12 @@ import React from "react";
 import sources from "../../utils/sources";
 import { FeatureImage, Features, FeatureButton } from "./styles";
 
-const Feature = ({ imageUrl, title, description, link }) => {
+const Feature = ({
+  imageUrl,
+  title,
+  description,
+  link,
+}: (typeof sources)[number]) => {
   const imgUrl = useBaseUrl(imageUrl);
   return (
     <div className={"col col--4"}>

@@ -14,7 +14,7 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import './commands'
+import "./commands";
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
@@ -27,28 +27,28 @@ declare global {
        * Custom command to select DOM element by data-cy attribute.
        * @example cy.dataCy('greeting')
        */
-      dataCy(value: string): Chainable<JQuery<HTMLElement>>
-      
+      dataCy(value: string): Chainable<JQuery<HTMLElement>>;
+
       /**
        * Custom command to check if an element is visible and contains text
        * @example cy.shouldBeVisibleAndContain('Hello World')
        */
-      shouldBeVisibleAndContain(text: string): Chainable<JQuery<HTMLElement>>
-      
+      shouldBeVisibleAndContain(text: string): Chainable<JQuery<HTMLElement>>;
+
       /**
        * Custom command to navigate to a section
        * @example cy.navigateToSection('Backend')
        */
-      navigateToSection(sectionName: string): Chainable<void>
-      
+      navigateToSection(sectionName: string): Chainable<void>;
+
       /**
        * Custom command to test responsive design
        * @example cy.testResponsive()
        */
-      testResponsive(breakpoints?: Array<[number, number]>): Chainable<void>
+      testResponsive(breakpoints?: Array<[number, number]>): Chainable<void>;
     }
   }
 }
 
 // Prevent TypeScript errors
-export {} 
+export {};
