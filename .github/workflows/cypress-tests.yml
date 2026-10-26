@@ -2,27 +2,27 @@ name: Cypress E2E Tests
 
 on:
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   push:
-    branches: [ main, master ]
+    branches: [main, master]
 
 env:
-  # Use Node.js 24 to match Netlify configuration
-  NODE_VERSION: '24'
+  # Use Node.js 26 to match Netlify configuration
+  NODE_VERSION: "26"
 
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -31,12 +31,12 @@ jobs:
         run: yarn build
 
       - name: Start server and run Cypress tests
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@v7
         with:
           # Start the server before running tests
           start: yarn start
           # Wait for the server to be ready
-          wait-on: 'http://localhost:3000'
+          wait-on: "http://localhost:3000"
           wait-on-timeout: 120
           # Run tests in headless mode
           browser: chrome
@@ -46,7 +46,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Cypress screenshots on failure
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: cypress-screenshots
@@ -54,7 +54,7 @@ jobs:
           retention-days: 7
 
       - name: Upload Cypress videos on failure
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: cypress-videos
@@ -77,4 +77,4 @@ jobs:
             exit 1
           else
             echo "Cypress tests passed"
-          fi 
+          fi
