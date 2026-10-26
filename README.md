@@ -81,7 +81,7 @@ yarn test:e2e
 
 - **Framework**: [Docusaurus 3.10.2](https://docusaurus.io/)
 - **Language**: [TypeScript 7.0.2](https://www.typescriptlang.org/)
-- **Runtime**: [Node.js 24+](https://nodejs.org/)
+- **Runtime**: [Node.js 26+](https://nodejs.org/)
 - **Testing**: [Cypress 16.2.0](https://www.cypress.io/)
 - **CI/CD**: [GitHub Actions](https://github.com/features/actions)
 - **Deployment**: [Netlify](https://www.netlify.com/)
