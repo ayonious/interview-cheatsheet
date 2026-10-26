@@ -33,8 +33,7 @@
     "clsx": "^2.1.1",
     "prism-react-renderer": "^2.4.1",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "styled-components": "^6.6.0"
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@babel/preset-react": "^8.0.1",
@@ -67,8 +66,7 @@
     "prettier": "^3.9.10",
     "start-server-and-test": "^3.0.13",
     "ts-jest": "^29.4.15",
-    "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "@types/styled-components": "^5.1.36"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "engines": {
     "node": ">=24.0"

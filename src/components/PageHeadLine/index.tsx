@@ -2,53 +2,50 @@ import Link from "@docusaurus/Link";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import React from "react";
 
-import {
-  ColoredWords,
-  GetStartButton,
-  ButtonsContainer,
-  Headline,
-  HeadlineSub,
-  HeadlineText,
-  ProductLogoHomePage,
-} from "./styles";
+import styles from "./styles.module.css";
 
 const ColoredText = ({ text }: { text: string }) => (
-  <ColoredWords>{text}</ColoredWords>
+  <span className={styles.ColoredWords}>{text}</span>
 );
 const UnColoredText = ({ text }: { text: string }) => <span>{text}</span>;
 
 const NavigationButtons = () => (
-  <ButtonsContainer>
-    <GetStartButton>
+  <div className={styles.ButtonsContainer}>
+    <div className={styles.GetStartButton}>
       <Link to={useBaseUrl("docs/")}>🧙‍♂️ Behavior</Link>
-    </GetStartButton>
-    <GetStartButton>
+    </div>
+    <div className={styles.GetStartButton}>
       <Link to={useBaseUrl("docs/backend/Databases")}>🏋️‍♀️ Backend</Link>
-    </GetStartButton>
-    <GetStartButton>
+    </div>
+    <div className={styles.GetStartButton}>
       <Link to={useBaseUrl("docs/frontend/Promise")}>💄 Frontend</Link>
-    </GetStartButton>
-  </ButtonsContainer>
+    </div>
+  </div>
 );
 
 const ProductLogo = () => (
-  <ProductLogoHomePage alt="CheatSheet logo" src={useBaseUrl("img/logo.png")} />
+  <img
+    className={styles.ProductLogoHomePage}
+    width={200}
+    alt="CheatSheet logo"
+    src={useBaseUrl("img/logo.png")}
+  />
 );
 
 const PageHeadLine = () => {
   return (
-    <Headline>
-      <HeadlineSub>
-        <HeadlineText>
+    <div className={styles.Headline}>
+      <div className={styles.HeadlineSub}>
+        <h1 className={styles.HeadlineText}>
           <ProductLogo />
           <ColoredText text="Collection" />
           <UnColoredText text=" of" />
           <ColoredText text=" Tech Interviews" />
           <UnColoredText text="cheat sheet" />
-        </HeadlineText>
+        </h1>
         <NavigationButtons />
-      </HeadlineSub>
-    </Headline>
+      </div>
+    </div>
   );
 };
 

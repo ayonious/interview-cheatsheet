@@ -1,37 +1,34 @@
-import styled from "styled-components";
-import { ColorPrimary } from "../../css/variables";
-
-export const Features = styled.section`
+.Features {
   display: flex;
   align-items: center;
   padding: 2rem 0;
   width: 100%;
-`;
+}
 
-export const FeatureImage = styled.img`
+.FeatureImage {
   height: 200px;
   width: 200px;
-`;
+}
 
-export const FeatureButton = styled.div`
+.FeatureButton {
   margin-top: 15px;
   text-align: center;
 
-  a {
+  & a {
     padding: 10px 30px;
-    border: 2px solid ${ColorPrimary};
+    border: 2px solid #a73851;
     display: inline-block;
     border-radius: 6px;
-    color: ${ColorPrimary};
+    color: #a73851;
     font-size: 18px;
     font-weight: bold;
     background-color: transparent;
     transition: all 0.3s ease;
 
-    :hover {
+    &:hover {
       text-decoration: none;
-      background-color: ${ColorPrimary};
+      background-color: #a73851;
       color: white;
     }
   }
-`;
+}
