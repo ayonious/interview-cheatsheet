@@ -7,16 +7,16 @@ describe("Content Tests", () => {
 
   describe("Backend Documentation", () => {
     it("should display comprehensive database content", () => {
-      cy.visit("/backend/Databases");
+      cy.visit("/docs/backend/Databases");
       cy.get("h1").should("contain.text", "Database");
       cy.get("main").should("contain.text", "SQL");
       cy.get("main").should("contain.text", "NoSQL");
       cy.get("main").should("contain.text", "MongoDB");
-      cy.get("main").should("contain.text", "PostgreSQL");
+      cy.get("main").should("contain.text", "ACID");
     });
 
     it("should display programming language types content", () => {
-      cy.visit("/backend/ProgrammingLanguageTypes");
+      cy.visit("/docs/backend/ProgrammingLanguageTypes");
       cy.get("h1").should("contain.text", "Programming Language Types");
       cy.get("main").should("contain.text", "JavaScript");
       cy.get("main").should("contain.text", "TypeScript");
@@ -26,7 +26,7 @@ describe("Content Tests", () => {
     });
 
     it("should display object-oriented programming content", () => {
-      cy.visit("/backend/ObjectOrientedProgramming");
+      cy.visit("/docs/backend/ObjectOrientedProgramming");
       cy.get("h1").should("contain.text", "Object-Oriented Programming");
       cy.get("main").should("contain.text", "Encapsulation");
       cy.get("main").should("contain.text", "Inheritance");
@@ -35,7 +35,7 @@ describe("Content Tests", () => {
     });
 
     it("should display statelessness content", () => {
-      cy.visit("/backend/Statelessness");
+      cy.visit("/docs/backend/Statelessness");
       cy.get("h1").should("contain.text", "Statelessness");
       cy.get("main").should("contain.text", "JWT");
       cy.get("main").should("contain.text", "session");
@@ -43,7 +43,7 @@ describe("Content Tests", () => {
     });
 
     it("should display message queue content", () => {
-      cy.visit("/backend/MessageQueue");
+      cy.visit("/docs/backend/MessageQueue");
       cy.get("h1").should("contain.text", "Message");
       cy.get("main").should("contain.text", "RabbitMQ");
       cy.get("main").should("contain.text", "Kafka");
@@ -52,7 +52,7 @@ describe("Content Tests", () => {
     });
 
     it("should display event loop content", () => {
-      cy.visit("/backend/Eventloop");
+      cy.visit("/docs/backend/Eventloop");
       cy.get("h1").should("contain.text", "Event Loop");
       cy.get("main").should("contain.text", "JavaScript");
       cy.get("main").should("contain.text", "Call Stack");
@@ -60,7 +60,7 @@ describe("Content Tests", () => {
     });
 
     it("should display locks and synchronization content", () => {
-      cy.visit("/backend/Lock");
+      cy.visit("/docs/backend/Lock");
       cy.get("h1").should("contain.text", "Locks");
       cy.get("main").should("contain.text", "Deadlock");
       cy.get("main").should("contain.text", "Race condition");
@@ -70,7 +70,7 @@ describe("Content Tests", () => {
 
   describe("Behavior Documentation", () => {
     it("should display STAR method content", () => {
-      cy.visit("/behavior/StarMethod");
+      cy.visit("/docs/behavior/StarMethod");
       cy.get("h1").should("contain.text", "STAR Method");
       cy.get("main").should("contain.text", "STAR");
       cy.get("main").should("contain.text", "Situation");
@@ -80,7 +80,7 @@ describe("Content Tests", () => {
     });
 
     it("should display common questions content", () => {
-      cy.visit("/behavior/CommonQuestions");
+      cy.visit("/docs/behavior/CommonQuestions");
       cy.get("h1").should("contain.text", "Common Behavioral Questions");
       cy.get("main").should("contain.text", "deadline");
       cy.get("main").should("contain.text", "ownership");
@@ -88,16 +88,16 @@ describe("Content Tests", () => {
     });
 
     it("should display interview tips content", () => {
-      cy.visit("/behavior/InterviewTips");
+      cy.visit("/docs/behavior/InterviewTips");
       cy.get("h1").should("contain.text", "Interview Tips");
       cy.get("main").should("contain.text", "Story Bank");
-      cy.get("main").should("contain.text", "preparation");
+      cy.get("main").should("contain.text", "Preparation");
     });
   });
 
   describe("Code Examples", () => {
     it("should display properly formatted code blocks", () => {
-      cy.visit("/backend/ProgrammingLanguageTypes");
+      cy.visit("/docs/backend/ProgrammingLanguageTypes");
 
       // Check for code blocks
       cy.get("pre").should("have.length.greaterThan", 0);
@@ -109,7 +109,7 @@ describe("Content Tests", () => {
     });
 
     it("should have copy buttons for code blocks", () => {
-      cy.visit("/backend/ObjectOrientedProgramming");
+      cy.visit("/docs/backend/ObjectOrientedProgramming");
 
       // Check if copy buttons exist (may vary based on Docusaurus theme)
       cy.get("pre").then(($pre) => {
@@ -122,7 +122,7 @@ describe("Content Tests", () => {
 
   describe("Content Structure", () => {
     it("should have proper heading hierarchy", () => {
-      cy.visit("/backend/ObjectOrientedProgramming");
+      cy.visit("/docs/backend/ObjectOrientedProgramming");
 
       // Check heading structure
       cy.get("h1").should("have.length", 1);
@@ -131,7 +131,7 @@ describe("Content Tests", () => {
     });
 
     it("should have table of contents navigation", () => {
-      cy.visit("/backend/ObjectOrientedProgramming");
+      cy.visit("/docs/backend/ObjectOrientedProgramming");
 
       // Check for table of contents
       cy.get(".table-of-contents").should("be.visible");
@@ -143,7 +143,7 @@ describe("Content Tests", () => {
     });
 
     it("should display comparison tables correctly", () => {
-      cy.visit("/backend/ObjectOrientedProgramming");
+      cy.visit("/docs/backend/ObjectOrientedProgramming");
 
       // Check for tables
       cy.get("table").should("have.length.greaterThan", 0);
@@ -154,7 +154,7 @@ describe("Content Tests", () => {
 
   describe("Links and References", () => {
     it("should have working internal links", () => {
-      cy.visit("/backend/Databases");
+      cy.visit("/docs/backend/Databases");
 
       // Test internal links if they exist
       cy.get('main a[href^="/"]').then(($links) => {
@@ -162,14 +162,14 @@ describe("Content Tests", () => {
           cy.wrap($links).first().click();
           cy.url().should(
             "not.equal",
-            Cypress.config().baseUrl + "/backend/Databases",
+            Cypress.config().baseUrl + "/docs/backend/Databases",
           );
         }
       });
     });
 
     it("should have proper external link handling", () => {
-      cy.visit("/backend/Eventloop");
+      cy.visit("/docs/backend/Eventloop");
 
       // Check external links (should open in new tab)
       cy.get('main a[href^="http"]').then(($links) => {
@@ -186,7 +186,7 @@ describe("Content Tests", () => {
 
   describe("Accessibility", () => {
     it("should have proper heading structure for screen readers", () => {
-      cy.visit("/backend/ObjectOrientedProgramming");
+      cy.visit("/docs/backend/ObjectOrientedProgramming");
 
       // Check heading hierarchy (should not skip levels)
       cy.get("h1, h2, h3, h4, h5, h6").each(($heading, index) => {

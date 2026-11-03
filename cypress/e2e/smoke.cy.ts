@@ -14,8 +14,8 @@ describe("Smoke Tests", () => {
   });
 
   it("should load a backend page", () => {
-    cy.visit("/backend/Databases");
-    cy.get("h1").should("be.visible");
+    cy.visit("/docs/backend/Databases");
+    cy.get("h1").should("contain.text", "Databases");
     cy.get("main").should("be.visible");
   });
 });

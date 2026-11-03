@@ -19,8 +19,9 @@ describe("Navigation Tests", () => {
 
   it("should navigate to Behavior section", () => {
     cy.get("nav").contains("Behavior").click();
-    cy.url().should("include", "/behavior/");
-    cy.get("h1").should("contain.text", "Introduction");
+    // The behavior introduction is the docs landing page (slug: /)
+    cy.location("pathname").should("eq", "/docs/");
+    cy.get("h1").should("contain.text", "Behavioral Interview");
   });
 
   it("should display sidebar navigation in document pages", () => {
@@ -33,21 +34,17 @@ describe("Navigation Tests", () => {
     cy.get(".theme-doc-sidebar-container").should("contain.text", "Databases");
     cy.get(".theme-doc-sidebar-container").should(
       "contain.text",
-      "Programming Languages",
+      "Programming Language Types",
     );
     cy.get(".theme-doc-sidebar-container").should(
       "contain.text",
-      "Message Systems",
+      "Message Queue",
     );
   });
 
   it("should navigate between different backend topics", () => {
     cy.get("nav").contains("Backend").click();
 
-    // Navigate to Programming Languages section
-    cy.get(".theme-doc-sidebar-container")
-      .contains("Programming Languages")
-      .click();
     cy.get(".theme-doc-sidebar-container")
       .contains("Object-Oriented Programming")
       .click();
@@ -65,16 +62,16 @@ describe("Navigation Tests", () => {
 
     // Check if breadcrumbs exist and are functional
     cy.get('nav[aria-label="Breadcrumbs"]').should("be.visible");
-    cy.get('nav[aria-label="Breadcrumbs"]').should("contain.text", "Backend");
+    cy.get('nav[aria-label="Breadcrumbs"]').should("contain.text", "Databases");
   });
 
   it("should handle direct URL navigation", () => {
     // Test direct navigation to specific pages
-    cy.visit("/backend/Statelessness");
+    cy.visit("/docs/backend/Statelessness");
     cy.get("h1").should("contain.text", "Statelessness");
     cy.get("main").should("contain.text", "Distributed Systems");
 
-    cy.visit("/backend/MessageQueue");
+    cy.visit("/docs/backend/MessageQueue");
     cy.get("h1").should("contain.text", "Message");
     cy.get("main").should("contain.text", "RabbitMQ");
   });

@@ -56,12 +56,8 @@ describe("Homepage Tests", () => {
   });
 
   it("should have proper meta tags for SEO", () => {
-    cy.document().then((doc) => {
-      const metaDescription = doc.querySelector('meta[name="description"]');
-      expect(metaDescription).not.to.equal(null);
-
-      const ogTitle = doc.querySelector('meta[property="og:title"]');
-      expect(ogTitle).not.to.equal(null);
-    });
+    // Retry until the head tags are rendered (they may be injected after load)
+    cy.get('head meta[name="description"]').should("have.attr", "content");
+    cy.get('head meta[property="og:title"]').should("have.attr", "content");
   });
 });
